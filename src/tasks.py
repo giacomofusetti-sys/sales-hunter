@@ -1,6 +1,6 @@
 from crewai import Task
 
-def crea_task_ricerca(agente, regione, settore):
+def crea_task_ricerca(agente, regione, settore, num_aziende=3):
     return Task(
         description=(
             f"Cerca aziende nella regione {regione} che operano nel settore {settore} "
@@ -10,10 +10,10 @@ def crea_task_ricerca(agente, regione, settore):
             f"2. Che tipo di lavorazioni o impianti usa "
             f"3. Perché potrebbe aver bisogno di viteria speciale "
             f"4. Sito web se disponibile "
-            f"Trova almeno 5 aziende concrete e reali."
+            f"Trova esattamente {num_aziende} aziende concrete e reali."
         ),
         expected_output=(
-            "Una lista in formato testo semplice di almeno 5 aziende. "
+            f"Una lista in formato testo semplice di esattamente {num_aziende} aziende. "
             "Per ogni azienda scrivi: nome, città, sito web, descrizione attività, "
             "motivo per cui potrebbero essere clienti interessanti. "
             "NON includere tag XML, codice o comandi. Solo testo leggibile."
@@ -26,8 +26,11 @@ def crea_task_contatti(agente, lista_aziende):
         description=(
             f"Per ognuna di queste aziende, trova il contatto giusto da raggiungere:\n"
             f"{lista_aziende}\n\n"
+            f"Priorità assoluta: trova il responsabile acquisti (Purchasing Manager, "
+            f"Responsabile Acquisti, Supply Chain Manager, Procurement Manager). "
+            f"Solo se non lo trovi, cerca il responsabile ufficio tecnico o il direttore generale.\n\n"
             f"Per ogni azienda cerca:\n"
-            f"1. Nome e cognome del responsabile acquisti o ufficio tecnico\n"
+            f"1. Nome e cognome del responsabile acquisti\n"
             f"2. Il suo ruolo esatto\n"
             f"3. Email diretta se possibile, altrimenti email generica aziendale\n"
             f"4. Numero di telefono se disponibile\n\n"

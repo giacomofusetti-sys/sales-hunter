@@ -10,7 +10,7 @@ claude = LLM(
     api_key=os.getenv("ANTHROPIC_API_KEY")
 )
 
-def crea_prospector():
+def crea_prospector(max_iter=8):
     return Agent(
         role="Ricercatore di Potenziali Clienti",
         goal=(
@@ -26,10 +26,11 @@ def crea_prospector():
         ),
         tools=[search_tool, scrape_tool],
         verbose=True,
-        llm=claude
+        llm=claude,
+        max_iter=max_iter
     )
 
-def crea_contact_hunter():
+def crea_contact_hunter(max_iter=8):
     return Agent(
         role="Cacciatore di Contatti Commerciali",
         goal=(
@@ -43,5 +44,6 @@ def crea_contact_hunter():
         ),
         tools=[search_tool, scrape_tool],
         verbose=True,
-        llm=claude
+        llm=claude,
+        max_iter=max_iter
     )
