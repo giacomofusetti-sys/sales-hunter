@@ -1,6 +1,5 @@
 from crewai import Task
 
-
 def crea_task_ricerca(agente, regione, settore):
     return Task(
         description=(
@@ -14,9 +13,10 @@ def crea_task_ricerca(agente, regione, settore):
             f"Trova almeno 5 aziende concrete e reali."
         ),
         expected_output=(
-            "Una lista di almeno 5 aziende con per ognuna: "
-            "nome, città, descrizione attività, sito web, "
-            "e motivazione per cui potrebbero essere clienti interessanti."
+            "Una lista in formato testo semplice di almeno 5 aziende. "
+            "Per ogni azienda scrivi: nome, città, sito web, descrizione attività, "
+            "motivo per cui potrebbero essere clienti interessanti. "
+            "NON includere tag XML, codice o comandi. Solo testo leggibile."
         ),
         agent=agente
     )
@@ -34,8 +34,9 @@ def crea_task_contatti(agente, lista_aziende):
             f"Cerca sul sito aziendale, pagina contatti, LinkedIn, e Google."
         ),
         expected_output=(
-            "Una lista strutturata con per ogni azienda: "
+            "Una lista in formato testo semplice con per ogni azienda: "
             "nome contatto, ruolo, email, telefono. "
+            "NON includere tag XML, codice o comandi. Solo testo leggibile. "
             "Se non trovi il contatto diretto, indica almeno l'email generica aziendale."
         ),
         agent=agente
