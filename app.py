@@ -15,6 +15,191 @@ os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
 st.set_page_config(page_title="Sales Hunter", page_icon="🎯", layout="wide")
 
+# ── Dark mode theme ──────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+/* ── Palette ───────────────────────────────────────── */
+:root {
+    --bg-main:    #0e1117;
+    --bg-card:    #1e2130;
+    --bg-hover:   #252a3a;
+    --accent:     #4a9eff;
+    --accent-dim: #2d6abf;
+    --text-prim:  #e8eaf0;
+    --text-sec:   #9aa0b5;
+    --border:     #2e3348;
+    --success:    #2ecc71;
+    --error:      #e74c3c;
+    --info:       #3498db;
+}
+
+/* ── Global ────────────────────────────────────────── */
+html, body, [data-testid="stAppViewContainer"],
+[data-testid="stApp"] {
+    background-color: var(--bg-main) !important;
+    color: var(--text-prim) !important;
+}
+
+[data-testid="stHeader"] {
+    background-color: var(--bg-main) !important;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ── Sidebar ───────────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background-color: var(--bg-card) !important;
+    border-right: 1px solid var(--border);
+}
+[data-testid="stSidebar"] * {
+    color: var(--text-prim) !important;
+}
+[data-testid="stSidebar"] .stRadio label {
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: background .2s;
+}
+[data-testid="stSidebar"] .stRadio label:hover {
+    background: var(--bg-hover);
+}
+
+/* ── Main content area ─────────────────────────────── */
+[data-testid="stMainBlockContainer"],
+.main .block-container {
+    background-color: var(--bg-main) !important;
+    padding-top: 2rem;
+}
+
+/* ── Typography ────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-prim) !important;
+    font-weight: 700 !important;
+}
+h1 { border-bottom: 2px solid var(--accent); padding-bottom: .4rem; }
+p, li, span, label, div {
+    color: var(--text-prim) !important;
+}
+
+/* ── Cards / expanders / containers ───────────────── */
+[data-testid="stExpander"],
+[data-testid="stVerticalBlock"] > div[data-testid="element-container"] {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+}
+details > summary {
+    background-color: var(--bg-card) !important;
+    color: var(--text-prim) !important;
+    border-radius: 8px;
+    padding: 10px 14px !important;
+    font-weight: 600;
+}
+details[open] > summary {
+    border-bottom: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+}
+details > div {
+    background-color: var(--bg-card) !important;
+    border-radius: 0 0 8px 8px;
+    padding: 12px 16px;
+}
+
+/* ── Buttons ───────────────────────────────────────── */
+.stButton > button {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dim)) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    letter-spacing: .4px;
+    padding: 10px 20px !important;
+    transition: opacity .2s, transform .1s !important;
+    box-shadow: 0 2px 8px rgba(74,159,255,.25) !important;
+}
+.stButton > button:hover {
+    opacity: .88 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(74,159,255,.4) !important;
+}
+.stButton > button:active {
+    transform: translateY(0) !important;
+}
+
+/* ── Inputs / selects / sliders ────────────────────── */
+.stTextInput input, .stSelectbox select,
+div[data-baseweb="select"] > div,
+div[data-baseweb="input"] > div {
+    background-color: var(--bg-card) !important;
+    color: var(--text-prim) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+}
+.stTextInput input:focus,
+div[data-baseweb="input"] > div:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgba(74,159,255,.2) !important;
+}
+[data-baseweb="popover"] *, [data-baseweb="menu"] * {
+    background-color: var(--bg-card) !important;
+    color: var(--text-prim) !important;
+}
+[data-baseweb="option"]:hover {
+    background-color: var(--bg-hover) !important;
+}
+.stSlider [data-baseweb="slider"] div[role="slider"] {
+    background-color: var(--accent) !important;
+}
+.stSlider [data-baseweb="slider"] div[data-testid="stSlider-track"] {
+    background: var(--accent) !important;
+}
+
+/* ── Alerts: info / success / error / warning ──────── */
+[data-testid="stAlert"] {
+    border-radius: 8px !important;
+    border-left-width: 4px !important;
+}
+div[data-baseweb="notification"][kind="info"],
+.stInfo {
+    background-color: rgba(52,152,219,.12) !important;
+    border-color: var(--info) !important;
+}
+div[data-baseweb="notification"][kind="positive"],
+.stSuccess {
+    background-color: rgba(46,204,113,.12) !important;
+    border-color: var(--success) !important;
+}
+div[data-baseweb="notification"][kind="negative"],
+.stError {
+    background-color: rgba(231,76,60,.12) !important;
+    border-color: var(--error) !important;
+}
+
+/* ── Spinner ───────────────────────────────────────── */
+.stSpinner > div {
+    border-top-color: var(--accent) !important;
+}
+
+/* ── Divider ───────────────────────────────────────── */
+hr {
+    border-color: var(--border) !important;
+    margin: 1.2rem 0 !important;
+}
+
+/* ── Caption / small text ──────────────────────────── */
+.stCaption, small, [data-testid="stCaptionContainer"] {
+    color: var(--text-sec) !important;
+    font-size: .82rem !important;
+}
+
+/* ── Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+</style>
+""", unsafe_allow_html=True)
+# ────────────────────────────────────────────────────────────────────────────
+
 # Inizializzazione session state
 if "risultato_ricerca" not in st.session_state:
     st.session_state.risultato_ricerca = None
@@ -91,7 +276,7 @@ if pagina == "🔍 Nuova ricerca":
 
         with st.spinner("📋 L'agente sta cercando i contatti..."):
             contact_hunter = crea_contact_hunter(max_iter=velocita)
-            task_contatti = crea_task_contatti(contact_hunter, st.session_state.risultato_ricerca)
+            task_contatti = crea_task_contatti(contact_hunter, str(st.session_state.risultato_ricerca))
             crew2 = Crew(agents=[contact_hunter], tasks=[task_contatti], verbose=False)
             st.session_state.risultato_contatti = str(crew2.kickoff())
 

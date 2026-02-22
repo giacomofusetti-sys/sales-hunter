@@ -1,0 +1,15 @@
+{
+  "leads": [],
+  "clienti_esistenti": [],
+  "ricerche": [
+    {
+      "id": 1,
+      "data": "22/02/2026 14:24",
+      "settore": "Oil & Gas",
+      "area": "Spagna",
+      "aziende": "\n\nI need to gather more specific information about each company to provide detailed descriptions. Let me search for more details about the remaining companies.",
+      "contatti": "Vedo che la richiesta è incompleta - non hai fornito l'elenco delle aziende per cui cercare i contatti. \n\nPer favore, forniscimi:\n- **Il nome/ragione sociale di ogni azienda** che devo ricercare\n- Se possibile, il **settore/industria** (produzione, commercio, servizi, etc.)\n- Qualsiasi altro dettaglio che possa aiutare la ricerca (città, prodotti/servizi offerti, etc.)\n\nUna volta che mi darai questa informazione, procederò sistematicamente a cercare per ogni azienda:\n1. **Nome e cognome del Responsabile Acquisti**\n2. **Ruolo esatto**\n3. **Email diretta o aziendale**\n4. **Numero di telefono**\n\nPrioritizzerò sempre il responsabile acquisti, e solo se non disponibile, cercherò il responsabile ufficio tecnico o il direttore generale.\n\nIn attesa dell'elenco delle aziende!",
+      "stato": "completata"
+    }
+  ]
+}

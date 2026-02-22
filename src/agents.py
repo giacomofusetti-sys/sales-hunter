@@ -10,7 +10,7 @@ claude = LLM(
     api_key=os.getenv("ANTHROPIC_API_KEY")
 )
 
-def crea_prospector(max_iter=8):
+def crea_prospector(max_iter=12):
     return Agent(
         role="Ricercatore di Potenziali Clienti",
         goal=(
