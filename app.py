@@ -1,10 +1,14 @@
-import streamlit as st
 import os
 import sys
 import time
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
+# load_dotenv PRIMA di qualsiasi import che usa os.getenv a livello di modulo
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from dotenv import load_dotenv
+load_dotenv()
+os.environ.setdefault("SERPER_API_KEY", os.getenv("SERPER_API_KEY") or "")
+
+import streamlit as st
 from crewai import Crew
 from agents import crea_prospector, crea_contact_hunter, crea_email_sender
 from tasks import (
@@ -13,15 +17,11 @@ from tasks import (
     crea_task_email,
 )
 from analyst import crea_analyst, crea_task_analisi, parse_leads_json
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from database import (
     salva_leads, carica_leads, aggiorna_stato_lead,
     aggiungi_cliente_esistente, carica_clienti_esistenti,
 )
 from profilo_azienda import PROFILO_AZIENDA
-
-load_dotenv()
-os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
 
 def kickoff_con_retry(crew, max_tentativi=3, attesa=30):

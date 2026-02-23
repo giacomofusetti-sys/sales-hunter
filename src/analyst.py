@@ -8,10 +8,12 @@ from profilo_azienda import PROFILO_AZIENDA
 search_tool = SerperDevTool()
 scrape_tool = ScrapeWebsiteTool()
 
-claude = LLM(
-    model="anthropic/claude-haiku-4-5-20251001",
-    api_key=os.getenv("ANTHROPIC_API_KEY")
-)
+def _llm():
+    """Istanzia l'LLM al momento della chiamata, non all'import del modulo."""
+    return LLM(
+        model="anthropic/claude-haiku-4-5-20251001",
+        api_key=os.getenv("ANTHROPIC_API_KEY")
+    )
 
 
 def crea_analyst(max_iter=12):
@@ -40,7 +42,7 @@ def crea_analyst(max_iter=12):
         ),
         tools=[search_tool, scrape_tool],
         verbose=True,
-        llm=claude,
+        llm=_llm(),
         max_iter=max_iter
     )
 
