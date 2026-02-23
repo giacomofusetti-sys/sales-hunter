@@ -17,7 +17,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from database import (
     salva_leads, carica_leads, aggiorna_stato_lead,
     aggiungi_cliente_esistente, carica_clienti_esistenti,
-    carica_ricerche,
 )
 from profilo_azienda import PROFILO_AZIENDA
 
@@ -461,7 +460,7 @@ def _mostra_leads(leads, allow_stato_change=True):
 
 
 # ── Session state ─────────────────────────────────────────────────────────────
-PAGINE = ["🔍 Nuova ricerca", "📊 Lead salvati", "📁 Storico ricerche", "🚫 Clienti esistenti"]
+PAGINE = ["🔍 Nuova ricerca", "📊 Lead salvati", "🚫 Clienti esistenti"]
 
 for key, default in [
     ("risultato_ricerca", None),
@@ -718,27 +717,6 @@ elif pagina == "campagna_email":
     if st.button("← Torna ai lead"):
         st.session_state.campagna_attiva = False
         st.rerun()
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# STORICO RICERCHE (legacy)
-# ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "📁 Storico ricerche":
-    st.title("📁 Storico ricerche")
-
-    ricerche = carica_ricerche()
-
-    if not ricerche:
-        st.info("Nessuna ricerca ancora salvata.")
-    else:
-        for r in reversed(ricerche):
-            with st.expander(f"🔍 #{r['id']} — {r['settore']} in {r['area']} — {r['data']}"):
-                st.markdown("**🏭 Aziende trovate:**")
-                st.markdown(r["aziende"])
-                if r.get("contatti"):
-                    st.divider()
-                    st.markdown("**📋 Contatti:**")
-                    st.markdown(r["contatti"])
 
 
 # ══════════════════════════════════════════════════════════════════════════════

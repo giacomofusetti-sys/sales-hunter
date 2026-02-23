@@ -1,5 +1,62 @@
 {
-  "leads": [],
+  "leads": [
+    {
+      "nome": "Kelvion Holding GmbH",
+      "citta": "Herne (sede principale)",
+      "settore": "Scambiatori di calore - Heat Exchangers",
+      "sito": "https://www.kelvion.com/de/",
+      "descrizione": "Principale produttore globale di scambiatori di calore con sedi di produzione e engineering in tutta la Germania. Produce scambiatori a piastre, luftkühler, evaporatori, condensatori per applicazioni critiche in oil & gas, energia, petrolchimico, raffineria e LNG.",
+      "score": 9,
+      "motivazione_score": "OEM leader mondiale nel settore heat exchangers con necessità critica di bulloneria speciale certificata (B7, L7, 42CD4, inox, superleghe) per apparecchiature a pressione. Recente acquisizione da Apollo Funds per €2 miliardi (agosto 2025) evidenzia solidità e espansione. Perfetta compatibilità con profilo fornitore: certificazioni riconosciute in Germania, materiali speciali, piccole serie customizzate.",
+      "notizie_recenti": "Agosto 2025: Apollo Funds acquisisce Kelvion da Triton Partners per €2 miliardi; Marzo 2023: contratto maggiore per hydrogen production facility; 2024: Cascade Cooling System $31.5 milioni con data centre USA",
+      "stato": "da_contattare",
+      "id": 1,
+      "data_ricerca": "23/02/2026 16:16",
+      "area_ricerca": "germania"
+    },
+    {
+      "nome": "BORSIG Process Heat Exchanger GmbH",
+      "citta": "Berlino",
+      "settore": "Scambiatori di calore e apparecchi a pressione - Process Equipment",
+      "sito": "https://www.borsig.de/en/",
+      "descrizione": "Leader mondiale nella progettazione e produzione di sistemi di recupero termico, transfer line exchangers, scambiatori a tubi e apparecchi a pressione in acciaio. Specializzato in applicazioni critiche (sintesi ammoniaca, metanolo, idrogeno criogenico) con strutture produttive >22.000 m² in Germania.",
+      "score": 10,
+      "motivazione_score": "Fornitore di apparecchiature a pressione con massiccia necessità di bulloneria in acciai speciali certificati (42CD4, B7, L7 per alte temperature) e superleghe. Notizie recenti mostrano attività strategica: ordine hydrogen membrane unit da raffineria europea (aprile 2025), partnership green hydrogen HH2E (luglio 2024), test compressori storage idrogeno RWE (settembre 2024). Ubicazione Germania, certificazioni internazionali, settori oil & gas/energy - match perfetto.",
+      "notizie_recenti": "Aprile 2025: ordine hydrogen purification membrane unit raffineria europea; Settembre 2024: test compressor hydrogen cavern storage RWE; Luglio 2024: partnership green hydrogen HH2E; Giugno 2024: ACHEMA 2024 con focus hydrogen",
+      "stato": "da_contattare",
+      "id": 2,
+      "data_ricerca": "23/02/2026 16:16",
+      "area_ricerca": "germania"
+    },
+    {
+      "nome": "FUNKE Wärmeaustauscher Apparatebau GmbH",
+      "citta": "Gronau",
+      "settore": "Scambiatori di calore - Heat Exchangers",
+      "sito": "https://www.funke.de/en/",
+      "descrizione": "Specialista tedesco leader nella progettazione e produzione di scambiatori di calore a piastre gelati, shell-and-tube e raffreddatori ad aria per applicazioni industriali critiche. In operazione dal 1974 con >400 dipendenti globalmente. Ora parte del gruppo HYDAC. Personalizza completamente ogni soluzione per petrolchimico, raffineria, oil & gas, impianti industriali.",
+      "score": 8,
+      "motivazione_score": "Costruttore specializzato in scambiatori per ambienti corrosivi e critici (raffineria, petrolchimico, oil & gas) che necessita bulloneria in acciai legati (42CD4, inox 304/316) e superleghe. Forza nel customization su disegno cliente e piccole serie corrispondono perfettamente ai punti di forza fornitore. Ubicazione Gronau (confine Olanda) strategica per espansione Nord Europa. Generazione management transizione gennaio 2024 (Christian e Matthias Funke) indica stabilità e continuità operativa.",
+      "notizie_recenti": "Gennaio 2024: transizione management terza generazione (Christian e Matthias Funke); Ottobre 2023: reorganizzazione FUNKE USA con HYDAC Technology Corporation; Attivo su innovazione prodotti linea GS/GC per gas cooling",
+      "stato": "da_contattare",
+      "id": 3,
+      "data_ricerca": "23/02/2026 16:16",
+      "area_ricerca": "germania"
+    },
+    {
+      "nome": "API Schmidt-Bretten GmbH & Co. KG",
+      "citta": "Bretten, Baden-Württemberg",
+      "settore": "Scambiatori di calore - Heat Exchangers",
+      "sito": "https://www.apischmidt-bretten.de/en/",
+      "descrizione": "Produttore leader mondiale di scambiatori a piastre gelati e saliti (SIGMA, SIGMADUAL, SIGMASHELL) con radici tedesche dal 1879. Parte di API Heat Transfer (gruppo globale). Produce soluzioni customizzate per bevande, alimentare, heavy industry, power generation, oil & gas. Specializzato in high-performance per bearings, lube oil cooling e applicazioni critiche in pressione.",
+      "score": 8,
+      "motivazione_score": "OEM specializzato in high-performance heat exchangers con necessità di bulloneria certificata per flange e assemblaggi in acciaio legato, inox e superleghe (power gen, petrolchimico, gas naturale). Enfasi sulla customizzazione su disegno cliente allineata perfettamente con engineering-to-order fornitore. Baden-Württemberg è mercato strategico tedesco. Parte di API Heat Transfer (parte di ThermaSys/Wellspring Capital), confermando solidità finanziaria e accesso risorse globali.",
+      "notizie_recenti": "Parte di API Heat Transfer Inc. - ThermaSys portfolio; Attivamente presente nei principali mercati globali; Continua specializzazione su soluzioni customizzate high-performance per settori critici",
+      "stato": "da_contattare",
+      "id": 4,
+      "data_ricerca": "23/02/2026 16:16",
+      "area_ricerca": "germania"
+    }
+  ],
   "clienti_esistenti": [],
   "ricerche": [
     {
