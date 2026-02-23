@@ -36,6 +36,33 @@ def crea_prospector(max_iter=12):
         max_iter=max_iter
     )
 
+def crea_email_sender(max_iter=6):
+    return Agent(
+        role="Redattore di Email Commerciali B2B",
+        goal=(
+            "Redigere email commerciali personalizzate e professionali per ogni azienda prospect, "
+            "sfruttando le notizie recenti e il profilo specifico di ogni lead.\n\n"
+            f"PROFILO DELL'AZIENDA CHE RAPPRESENTI:\n{PROFILO_AZIENDA}"
+        ),
+        backstory=(
+            "Sei un copywriter B2B specializzato nel settore industriale italiano. "
+            "Lavori per un produttore di viteria speciale e tiranteria certificata. "
+            "Sai scrivere email commerciali che catturano l'attenzione senza sembrare spam: "
+            "concise, personalizzate, con un gancio specifico per ogni azienda.\n\n"
+            f"PROFILO DELL'AZIENDA CHE RAPPRESENTI:\n{PROFILO_AZIENDA}\n\n"
+            "Le tue email seguono questa struttura:\n"
+            "1. Apertura personalizzata che mostra di conoscere l'azienda\n"
+            "2. Proposta di valore collegata al settore specifico del prospect\n"
+            "3. Call-to-action chiara e diretta (appuntamento o videochiamata)\n"
+            "Tono: professionale, diretto, italiano corretto. Max 180 parole per email."
+        ),
+        tools=[],
+        verbose=True,
+        llm=claude,
+        max_iter=max_iter
+    )
+
+
 def crea_contact_hunter(max_iter=12):
     return Agent(
         role="Cacciatore di Contatti Commerciali",

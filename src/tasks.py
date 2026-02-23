@@ -27,6 +27,76 @@ def crea_task_ricerca(agente, regione, settore, num_aziende=3):
         agent=agente
     )
 
+def crea_task_contatti_lead(agente, leads):
+    """Task Fase 2: trova contatti partendo da lead strutturati."""
+    lista_testo = ""
+    for l in leads:
+        lista_testo += (
+            f"- {l.get('nome', 'N/D')} ({l.get('citta', '')})\n"
+            f"  Sito: {l.get('sito', 'N/D')}\n"
+            f"  Settore: {l.get('settore', 'N/D')}\n"
+            f"  Descrizione: {l.get('descrizione', 'N/D')}\n\n"
+        )
+    return Task(
+        description=(
+            f"IMPORTANTE: Completa la ricerca contatti per TUTTE le aziende prima di rispondere.\n\n"
+            f"Stai cercando contatti per proporre forniture di viteria speciale e tiranteria certificata.\n"
+            f"Profilo fornitore:\n{PROFILO_AZIENDA}\n\n"
+            f"Aziende da contattare:\n{lista_testo}\n"
+            f"Per ogni azienda individua il contatto più rilevante:\n"
+            f"1. Prima scelta: Responsabile Acquisti / Procurement Manager\n"
+            f"2. Seconda scelta: Responsabile Ufficio Tecnico\n"
+            f"3. Terza scelta: Direttore Generale o Operations Manager\n\n"
+            f"Cerca su sito aziendale, pagina contatti, LinkedIn, Google."
+        ),
+        expected_output=(
+            "Lista testo con per ogni azienda:\n"
+            "- Nome azienda\n"
+            "- Nome e cognome contatto\n"
+            "- Ruolo\n"
+            "- Email\n"
+            "- Telefono (se disponibile)\n"
+            "Se non trovi il contatto diretto, indica l'email generica aziendale."
+        ),
+        agent=agente
+    )
+
+
+def crea_task_email(agente, leads, contatti):
+    """Task Fase 2: redige email commerciali personalizzate."""
+    leads_info = "\n".join([
+        f"- {l.get('nome', '')} ({l.get('settore', '')}): "
+        f"{l.get('notizie_recenti', 'Nessuna notizia recente')} | "
+        f"Score: {l.get('score', 'N/D')}/10"
+        for l in leads
+    ])
+    return Task(
+        description=(
+            f"Redigi un'email commerciale personalizzata per ogni azienda prospect.\n\n"
+            f"PROFILO AZIENDA FORNITRICE:\n{PROFILO_AZIENDA}\n\n"
+            f"LEAD CON NOTIZIE RECENTI:\n{leads_info}\n\n"
+            f"CONTATTI TROVATI:\n{contatti}\n\n"
+            f"Per ogni azienda scrivi un'email professionale in italiano che:\n"
+            f"- Si presenti brevemente come fornitore specializzato\n"
+            f"- Faccia riferimento specifico al settore dell'azienda\n"
+            f"- Sfrutti le notizie recenti per personalizzare l'approccio (se disponibili)\n"
+            f"- Proponga un appuntamento o una breve videochiamata\n"
+            f"- Sia concisa (max 180 parole) e con tono professionale ma diretto"
+        ),
+        expected_output=(
+            "Un'email per ogni azienda, separate da '---'. Formato:\n"
+            "AZIENDA: [nome]\n"
+            "A: [nome contatto] - [ruolo]\n"
+            "Oggetto: [oggetto]\n"
+            "\n"
+            "[corpo email]\n"
+            "\n"
+            "---\n"
+        ),
+        agent=agente
+    )
+
+
 def crea_task_contatti(agente, lista_aziende):
     return Task(
         description=(

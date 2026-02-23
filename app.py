@@ -6,14 +6,24 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from dotenv import load_dotenv
 from crewai import Crew
-from agents import crea_prospector, crea_contact_hunter
-from tasks import crea_task_ricerca, crea_task_contatti
+from agents import crea_prospector, crea_contact_hunter, crea_email_sender
+from tasks import (
+    crea_task_ricerca,
+    crea_task_contatti_lead,
+    crea_task_email,
+)
+from analyst import crea_analyst, crea_task_analisi, parse_leads_json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
-from database import salva_ricerca, carica_ricerche, aggiungi_cliente_esistente, carica_clienti_esistenti
+from database import (
+    salva_leads, carica_leads, aggiorna_stato_lead,
+    aggiungi_cliente_esistente, carica_clienti_esistenti,
+    carica_ricerche,
+)
 from profilo_azienda import PROFILO_AZIENDA
 
 load_dotenv()
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
+
 
 def kickoff_con_retry(crew, max_tentativi=3, attesa=30):
     for tentativo in range(1, max_tentativi + 1):
@@ -27,6 +37,7 @@ def kickoff_con_retry(crew, max_tentativi=3, attesa=30):
                 time.sleep(attesa)
             else:
                 raise
+
 
 st.set_page_config(page_title="Sales Hunter", page_icon="🎯", layout="wide")
 
@@ -399,29 +410,116 @@ hr {
 """, unsafe_allow_html=True)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Inizializzazione session state
-if "risultato_ricerca" not in st.session_state:
-    st.session_state.risultato_ricerca = None
-if "risultato_contatti" not in st.session_state:
-    st.session_state.risultato_contatti = None
-if "ultima_ricerca_settore" not in st.session_state:
-    st.session_state.ultima_ricerca_settore = None
-if "ultima_ricerca_area" not in st.session_state:
-    st.session_state.ultima_ricerca_area = None
+# ── Funzione helper per mostrare lead ─────────────────────────────────────────
+def _mostra_leads(leads, allow_stato_change=True):
+    STATI = ["da_contattare", "contattato", "non_interessante"]
+    STATO_ICON = {"da_contattare": "📬", "contattato": "✅", "non_interessante": "❌"}
 
-# Menu laterale
+    for lead in leads:
+        score = lead.get("score", 0)
+        badge = "🟢" if score >= 7 else "🟡" if score >= 4 else "🔴"
+        stato = lead.get("stato", "da_contattare")
+        icona_stato = STATO_ICON.get(stato, "📬")
+        lead_id = lead.get("id", 0)
+
+        label = (
+            f"{badge} {lead.get('nome', 'N/D')} — {lead.get('citta', '')} "
+            f"| Score: {score}/10 | {icona_stato} {stato}"
+        )
+
+        with st.expander(label, expanded=False):
+            col1, col2 = st.columns([3, 1])
+
+            with col1:
+                st.markdown(f"**Settore:** {lead.get('settore', 'N/D')}")
+                st.markdown(f"**Sito:** {lead.get('sito', 'N/D')}")
+                st.markdown(f"**Descrizione:** {lead.get('descrizione', 'N/D')}")
+                if lead.get("notizie_recenti") and lead["notizie_recenti"] != "Nessuna notizia recente trovata":
+                    st.markdown(f"**Notizie recenti:** {lead['notizie_recenti']}")
+                if lead.get("motivazione_score"):
+                    st.caption(f"Score motivazione: {lead['motivazione_score']}")
+                if lead.get("data_ricerca"):
+                    st.caption(f"Ricerca: {lead['data_ricerca']} | Area: {lead.get('area_ricerca', 'N/D')}")
+
+            with col2:
+                if allow_stato_change:
+                    try:
+                        idx = STATI.index(stato)
+                    except ValueError:
+                        idx = 0
+                    nuovo_stato = st.selectbox(
+                        "Stato",
+                        STATI,
+                        index=idx,
+                        key=f"stato_{lead_id}"
+                    )
+                    if nuovo_stato != stato:
+                        aggiorna_stato_lead(lead_id, nuovo_stato)
+                        st.rerun()
+                else:
+                    st.markdown(f"**{icona_stato} {stato}**")
+
+
+# ── Session state ─────────────────────────────────────────────────────────────
+PAGINE = ["🔍 Nuova ricerca", "📊 Lead salvati", "📁 Storico ricerche", "🚫 Clienti esistenti"]
+
+for key, default in [
+    ("risultato_ricerca", None),
+    ("leads_trovati", []),
+    ("ultima_ricerca_settore", None),
+    ("ultima_ricerca_area", None),
+    ("campagna_attiva", False),
+    ("ultima_pagina_radio", PAGINE[0]),
+    ("risultato_contatti_campagna", None),
+    ("risultato_email_campagna", None),
+]:
+    if key not in st.session_state:
+        st.session_state[key] = default
+
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.title("⚙️ Impostazioni")
-    pagina = st.radio("Navigazione", ["🔍 Nuova ricerca", "📁 Storico ricerche", "🚫 Clienti esistenti"])
+
+    pagina_nav = st.radio("Navigazione", PAGINE)
+
+    # Se l'utente cambia pagina via radio, disattiva la campagna
+    if pagina_nav != st.session_state.ultima_pagina_radio:
+        st.session_state.campagna_attiva = False
+        st.session_state.ultima_pagina_radio = pagina_nav
 
     st.divider()
+
     with st.expander("🏭 Profilo azienda", expanded=False):
         st.markdown(f"```\n{PROFILO_AZIENDA.strip()}\n```")
 
-# PAGINA 1 - NUOVA RICERCA
+    st.divider()
+
+    # ── Bottone Fase 2 ────────────────────────────────────────────────────────
+    leads_pending = [l for l in carica_leads() if l.get("stato") == "da_contattare"]
+    n_pending = len(leads_pending)
+
+    if n_pending > 0:
+        st.caption(f"📬 {n_pending} lead pronti per la campagna")
+        if st.button("📧 Avvia campagna email", use_container_width=True, type="primary"):
+            st.session_state.campagna_attiva = True
+            st.rerun()
+    else:
+        st.caption("Nessun lead da contattare")
+        st.button("📧 Avvia campagna email", use_container_width=True, disabled=True)
+
+# ── Routing ───────────────────────────────────────────────────────────────────
+if st.session_state.campagna_attiva:
+    pagina = "campagna_email"
+else:
+    pagina = pagina_nav
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# FASE 1 — NUOVA RICERCA
+# ══════════════════════════════════════════════════════════════════════════════
 if pagina == "🔍 Nuova ricerca":
     st.title("🎯 Sales Hunter")
-    st.subheader("Trova clienti per viteria speciale e tiranteria")
+    st.subheader("Fase 1 — Trova e valuta i prospect")
 
     col1, col2 = st.columns(2)
 
@@ -467,44 +565,164 @@ if pagina == "🔍 Nuova ricerca":
         clienti_esistenti = carica_clienti_esistenti()
 
         st.info(f"🔍 Ricerca in corso: **{settore_finale}** in **{area}**")
-
         if clienti_esistenti:
             st.caption(f"⚠️ Verranno esclusi {len(clienti_esistenti)} clienti già esistenti")
 
         max_iter = num_aziende * 4
 
-        with st.spinner("🔍 L'agente sta cercando aziende..."):
+        # Step 1 — Prospector
+        with st.spinner("🔍 Prospector: ricerca aziende in corso..."):
             prospector = crea_prospector(max_iter=max_iter)
             task_ricerca = crea_task_ricerca(prospector, area, settore_finale, num_aziende)
             crew1 = Crew(agents=[prospector], tasks=[task_ricerca], verbose=False)
             st.session_state.risultato_ricerca = kickoff_con_retry(crew1)
 
-        with st.spinner("📋 L'agente sta cercando i contatti..."):
-            contact_hunter = crea_contact_hunter(max_iter=max_iter)
-            task_contatti = crea_task_contatti(contact_hunter, str(st.session_state.risultato_ricerca))
-            crew2 = Crew(agents=[contact_hunter], tasks=[task_contatti], verbose=False)
-            st.session_state.risultato_contatti = kickoff_con_retry(crew2)
+        # Step 2 — Analyst
+        with st.spinner("📊 Analyst: valutazione score e notizie recenti..."):
+            analyst = crea_analyst(max_iter=max_iter)
+            task_analisi = crea_task_analisi(
+                analyst,
+                str(st.session_state.risultato_ricerca),
+                settore_finale,
+                area
+            )
+            crew2 = Crew(agents=[analyst], tasks=[task_analisi], verbose=False)
+            output_analisi = kickoff_con_retry(crew2)
 
-        st.session_state.ultima_ricerca_settore = settore_finale
-        st.session_state.ultima_ricerca_area = area
+        # Parse JSON e salva lead strutturati
+        leads_parsati = parse_leads_json(output_analisi)
 
-        # Salva nel database
-        id_ricerca = salva_ricerca(settore_finale, area, st.session_state.risultato_ricerca, st.session_state.risultato_contatti)
-        st.caption(f"💾 Ricerca salvata nel database (ID: {id_ricerca})")
+        if leads_parsati:
+            n_salvati = salva_leads(leads_parsati, settore_finale, area)
+            st.session_state.leads_trovati = leads_parsati
+            st.session_state.ultima_ricerca_settore = settore_finale
+            st.session_state.ultima_ricerca_area = area
+            st.success(f"✅ {n_salvati} lead salvati con score in leads.json")
+        else:
+            st.warning("⚠️ Impossibile parsare i lead come JSON. Output grezzo mostrato sotto.")
+            st.session_state.leads_trovati = []
+            st.text_area("Output Analyst (grezzo)", output_analisi, height=300)
 
-    # Mostra risultati dalla session state (persistono tra i cambi pagina)
-    if st.session_state.risultato_ricerca:
+    # Mostra i lead trovati nell'ultima ricerca
+    if st.session_state.leads_trovati:
         if st.session_state.ultima_ricerca_settore:
-            st.info(f"Ultima ricerca: **{st.session_state.ultima_ricerca_settore}** in **{st.session_state.ultima_ricerca_area}**")
-        st.success("✅ Aziende trovate!")
-        st.markdown("### 🏭 Aziende identificate")
-        st.markdown(st.session_state.risultato_ricerca)
-        st.divider()
-        st.success("✅ Contatti trovati!")
-        st.markdown("### 📋 Contatti commerciali")
-        st.markdown(st.session_state.risultato_contatti)
+            st.info(
+                f"Ultima ricerca: **{st.session_state.ultima_ricerca_settore}** "
+                f"in **{st.session_state.ultima_ricerca_area}**"
+            )
+        st.markdown("### 📊 Lead trovati e valutati")
+        _mostra_leads(st.session_state.leads_trovati, allow_stato_change=False)
+        st.caption("Vai a **Lead salvati** per gestire gli stati e avviare la campagna email.")
 
-# PAGINA 2 - STORICO RICERCHE
+
+# ══════════════════════════════════════════════════════════════════════════════
+# LEAD SALVATI
+# ══════════════════════════════════════════════════════════════════════════════
+elif pagina == "📊 Lead salvati":
+    st.title("📊 Lead salvati")
+
+    tutti_leads = carica_leads()
+
+    if not tutti_leads:
+        st.info("Nessun lead ancora. Avvia una ricerca dalla pagina **Nuova ricerca**.")
+    else:
+        # Filtro stato
+        stati_opzioni = ["Tutti", "da_contattare", "contattato", "non_interessante"]
+        col_f1, col_f2 = st.columns([2, 3])
+        with col_f1:
+            filtro_stato = st.selectbox("Filtra per stato", stati_opzioni)
+        with col_f2:
+            st.caption(
+                f"📬 da_contattare: {sum(1 for l in tutti_leads if l.get('stato') == 'da_contattare')}  "
+                f"| ✅ contattato: {sum(1 for l in tutti_leads if l.get('stato') == 'contattato')}  "
+                f"| ❌ non_interessante: {sum(1 for l in tutti_leads if l.get('stato') == 'non_interessante')}"
+            )
+
+        if filtro_stato == "Tutti":
+            leads_filtrati = tutti_leads
+        else:
+            leads_filtrati = [l for l in tutti_leads if l.get("stato") == filtro_stato]
+
+        st.markdown(f"**{len(leads_filtrati)} lead** trovati")
+        st.divider()
+        _mostra_leads(leads_filtrati, allow_stato_change=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# FASE 2 — CAMPAGNA EMAIL
+# ══════════════════════════════════════════════════════════════════════════════
+elif pagina == "campagna_email":
+    st.title("📧 Campagna Email")
+    st.subheader("Fase 2 — Contact Hunter + Email Sender")
+
+    leads_da_contattare = [l for l in carica_leads() if l.get("stato") == "da_contattare"]
+
+    if not leads_da_contattare:
+        st.info("Nessun lead con stato **da_contattare**. Modifica gli stati dalla pagina Lead salvati.")
+        if st.button("← Torna ai lead"):
+            st.session_state.campagna_attiva = False
+            st.rerun()
+        st.stop()
+
+    st.markdown(f"**{len(leads_da_contattare)} lead** pronti per la campagna:")
+    for l in leads_da_contattare:
+        score = l.get("score", 0)
+        badge = "🟢" if score >= 7 else "🟡" if score >= 4 else "🔴"
+        st.caption(f"{badge} {l.get('nome', 'N/D')} — {l.get('citta', '')} | Score {score}/10")
+
+    st.divider()
+
+    max_iter_c = len(leads_da_contattare) * 4
+
+    # Step 1 — Contact Hunter
+    if not st.session_state.risultato_contatti_campagna:
+        if st.button("🔎 Trova contatti", type="primary", use_container_width=True):
+            with st.spinner("🔎 Contact Hunter: ricerca contatti in corso..."):
+                contact_hunter = crea_contact_hunter(max_iter=max_iter_c)
+                task_contatti = crea_task_contatti_lead(contact_hunter, leads_da_contattare)
+                crew_c = Crew(agents=[contact_hunter], tasks=[task_contatti], verbose=False)
+                st.session_state.risultato_contatti_campagna = kickoff_con_retry(crew_c)
+            st.rerun()
+    else:
+        st.success("✅ Contatti trovati")
+        with st.expander("📋 Risultati Contact Hunter", expanded=False):
+            st.markdown(st.session_state.risultato_contatti_campagna)
+
+        # Step 2 — Email Sender
+        if not st.session_state.risultato_email_campagna:
+            if st.button("✉️ Genera email personalizzate", type="primary", use_container_width=True):
+                with st.spinner("✉️ Email Sender: redazione email in corso..."):
+                    email_sender = crea_email_sender(max_iter=6)
+                    task_email = crea_task_email(
+                        email_sender,
+                        leads_da_contattare,
+                        str(st.session_state.risultato_contatti_campagna)
+                    )
+                    crew_e = Crew(agents=[email_sender], tasks=[task_email], verbose=False)
+                    st.session_state.risultato_email_campagna = kickoff_con_retry(crew_e)
+                # Aggiorna stato lead a "contattato"
+                for l in leads_da_contattare:
+                    aggiorna_stato_lead(l["id"], "contattato")
+                st.rerun()
+        else:
+            st.success("✅ Email generate! Lead aggiornati a stato **contattato**.")
+            st.markdown("### ✉️ Email pronte")
+            st.markdown(st.session_state.risultato_email_campagna)
+
+            if st.button("🔄 Nuova campagna (reset risultati)"):
+                st.session_state.risultato_contatti_campagna = None
+                st.session_state.risultato_email_campagna = None
+                st.session_state.campagna_attiva = False
+                st.rerun()
+
+    if st.button("← Torna ai lead"):
+        st.session_state.campagna_attiva = False
+        st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STORICO RICERCHE (legacy)
+# ══════════════════════════════════════════════════════════════════════════════
 elif pagina == "📁 Storico ricerche":
     st.title("📁 Storico ricerche")
 
@@ -517,11 +735,15 @@ elif pagina == "📁 Storico ricerche":
             with st.expander(f"🔍 #{r['id']} — {r['settore']} in {r['area']} — {r['data']}"):
                 st.markdown("**🏭 Aziende trovate:**")
                 st.markdown(r["aziende"])
-                st.divider()
-                st.markdown("**📋 Contatti:**")
-                st.markdown(r["contatti"])
+                if r.get("contatti"):
+                    st.divider()
+                    st.markdown("**📋 Contatti:**")
+                    st.markdown(r["contatti"])
 
-# PAGINA 3 - CLIENTI ESISTENTI
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CLIENTI ESISTENTI
+# ══════════════════════════════════════════════════════════════════════════════
 elif pagina == "🚫 Clienti esistenti":
     st.title("🚫 Clienti esistenti")
     st.caption("Inserisci i clienti già acquisiti per escluderli dalle ricerche future.")
@@ -544,4 +766,3 @@ elif pagina == "🚫 Clienti esistenti":
             st.rerun()
         else:
             st.error("⚠️ Inserisci il nome del cliente.")
-
