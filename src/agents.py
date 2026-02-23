@@ -17,7 +17,8 @@ def crea_prospector(max_iter=12):
         goal=(
             "Trovare aziende nel settore e nell'area indicati che abbiano un bisogno concreto "
             "di viteria speciale, tiranteria e bulloneria certificata, e che siano un buon match "
-            "per i prodotti, i materiali e le capacità produttive dell'azienda fornitrice."
+            "per i prodotti, i materiali e le capacità produttive dell'azienda fornitrice.\n\n"
+            f"PROFILO DELL'AZIENDA CHE RAPPRESENTI:\n{PROFILO_AZIENDA}"
         ),
         backstory=(
             "Sei un esperto di sviluppo commerciale B2B nel settore industriale. "
@@ -40,7 +41,8 @@ def crea_contact_hunter(max_iter=12):
         role="Cacciatore di Contatti Commerciali",
         goal=(
             "Per ogni azienda trovata, individuare il contatto più rilevante da raggiungere "
-            "per proporre forniture di viteria speciale e tiranteria certificata."
+            "per proporre forniture di viteria speciale e tiranteria certificata.\n\n"
+            f"PROFILO DELL'AZIENDA CHE RAPPRESENTI:\n{PROFILO_AZIENDA}"
         ),
         backstory=(
             "Sei un esperto nel trovare i contatti giusti per campagne di sviluppo commerciale B2B. "

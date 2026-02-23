@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import sys
+import time
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from dotenv import load_dotenv
@@ -13,6 +14,19 @@ from profilo_azienda import PROFILO_AZIENDA
 
 load_dotenv()
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
+
+def kickoff_con_retry(crew, max_tentativi=5, attesa=30):
+    for tentativo in range(1, max_tentativi + 1):
+        try:
+            return str(crew.kickoff())
+        except Exception as e:
+            msg = str(e)
+            is_529 = "529" in msg or "overloaded" in msg.lower()
+            if is_529 and tentativo < max_tentativi:
+                st.warning(f"Server sovraccarico, riprovo... (tentativo {tentativo}/{max_tentativi})")
+                time.sleep(attesa)
+            else:
+                raise
 
 st.set_page_config(page_title="Sales Hunter", page_icon="🎯", layout="wide")
 
@@ -393,15 +407,19 @@ if pagina == "🔍 Nuova ricerca":
         settore = st.selectbox(
             "Settore merceologico",
             [
+                "Scambiatori di calore",
+                "Valvole industriali",
                 "Carpenteria metallica",
                 "Oil & Gas",
+                "Impianti industriali",
                 "Cantieristica navale",
                 "Energia e rinnovabili",
-                "Impianti industriali",
                 "Costruzioni e infrastrutture",
                 "Industria chimica",
+                "Movimento terra",
+                "Ferroviario",
+                "Manutenzione industriale",
                 "Macchine agricole",
-                "Industria farmaceutica",
                 "Altro (specifica sotto)"
             ]
         )
@@ -437,13 +455,13 @@ if pagina == "🔍 Nuova ricerca":
             prospector = crea_prospector(max_iter=max_iter)
             task_ricerca = crea_task_ricerca(prospector, area, settore_finale, num_aziende)
             crew1 = Crew(agents=[prospector], tasks=[task_ricerca], verbose=False)
-            st.session_state.risultato_ricerca = str(crew1.kickoff())
+            st.session_state.risultato_ricerca = kickoff_con_retry(crew1)
 
         with st.spinner("📋 L'agente sta cercando i contatti..."):
             contact_hunter = crea_contact_hunter(max_iter=max_iter)
             task_contatti = crea_task_contatti(contact_hunter, str(st.session_state.risultato_ricerca))
             crew2 = Crew(agents=[contact_hunter], tasks=[task_contatti], verbose=False)
-            st.session_state.risultato_contatti = str(crew2.kickoff())
+            st.session_state.risultato_contatti = kickoff_con_retry(crew2)
 
         st.session_state.ultima_ricerca_settore = settore_finale
         st.session_state.ultima_ricerca_area = area

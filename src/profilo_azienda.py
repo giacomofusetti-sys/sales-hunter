@@ -54,6 +54,24 @@ SETTORI CLIENTI ATTUALI
 - Movimento terra e macchine operatrici
 - Manutenzioni industriali
 
+CLIENTI DI RIFERIMENTO (portfolio attuale)
+Questi sono clienti reali già acquisiti, a conferma della credibilità e del posizionamento
+dell'azienda nei segmenti industriali ad alto valore tecnico:
+
+- Boldrocchi (Italia) — costruttore di scambiatori di calore e apparecchi a pressione
+- Wieland (Germania/Europa) — produttore di semilavorati in rame e leghe speciali, settore heat exchangers
+- SIAD Macchine Impianti (Italia) — compressori e impianti per gas industriali, oil & gas
+- Alfa Laval Olmi (Italia) — scambiatori di calore a fascio tubiero, raffinerie e petrolchimico
+- Cameron Italy / Schlumberger (Italia) — valvole e sistemi di controllo per oil & gas upstream
+- Solvay Chimica (Italia/Europa) — multinazionale chimica, impianti di processo ad alta corrosione
+- Emerson Process Management (Europa) — automazione e valvole industriali per processi critici
+- Tenconi (Italia) — carpenteria e strutture metalliche speciali
+- Mo.Tri.Dal (Italia) — distribuzione e lavorazione di acciai speciali
+- AFI Assemblage Forge Industrie (Francia) — forgiatura e assemblaggio per industria pesante
+
+Questo portfolio dimostra la capacità dell'azienda di fornire viteria certificata a costruttori OEM,
+engineering companies e plant operators nei settori più esigenti (pressure vessels, valves, process plants).
+
 OBIETTIVI DI ESPANSIONE
 Geografici: espansione in tutta Europa, con focus prioritario su:
   - Germania (mercato principale, alta domanda di qualità certificata)
