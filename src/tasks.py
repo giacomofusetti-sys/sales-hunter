@@ -88,6 +88,18 @@ def crea_task_email(agente, leads, contatti):
         "- Energia / Rinnovabili → Tiranti e viti in acciai speciali certificati, piccole serie su disegno\n"
         "- Industria chimica → Materiali resistenti alla corrosione (Hastelloy, duplex, PTFE-coating), "
         "  tracciabilità completa (rif. clienti: Solvay Chimica)\n"
+        "\n"
+        "VANTAGGI COMPETITIVI DA USARE NELL'EMAIL (in base al profilo del prospect):\n"
+        "- Se il prospect usa bulloneria di GRANDE DIAMETRO (>M80, es. grandi flangie, strutture pesanti,\n"
+        "  apparecchi a pressione di taglia rilevante): sottolinea che questi diametri sono\n"
+        "  normalmente introvabili dal commercio e che la produzione avviene esclusivamente su ordine\n"
+        "  tramite stampaggio a caldo (fino a M80) o tornitura CNC (oltre M80).\n"
+        "- Se il prospect usa SUPERLEGHE o ACCIAI SPECIALI su diametri medi (M6–M80, es. Inconel,\n"
+        "  Monel, Hastelloy, B7, 42CD4): sottolinea che il commercio standard non copre queste\n"
+        "  combinazioni materiale/dimensione, e che la produzione su disegno è l'unica alternativa.\n"
+        "- TIRANTI: nessun limite pratico di lunghezza, produzione su misura completa.\n"
+        "- NON menzionare il vantaggio dimensionale se il prospect usa solo bulloneria standard\n"
+        "  in acciai comuni su piccoli diametri: in quel caso la leva è certificazione e qualità.\n"
     )
 
     return Task(
@@ -108,6 +120,9 @@ def crea_task_email(agente, leads, contatti):
             f"   - Mai iniziare con 'Mi chiamo' o 'La contatto perché'\n\n"
             f"3. CORPO (3-4 righe) — proposta di valore specifica:\n"
             f"   - Menziona esplicitamente 1-2 prodotti specifici coerenti con il settore del prospect\n"
+            f"   - Se rilevante, cita le capacità dimensionali come leva commerciale:\n"
+            f"     es. 'produciamo viti fino a M80 con stampaggio a caldo e oltre tramite tornitura CNC,\n"
+            f"     con tiranti senza limiti di lunghezza' — utile per prospect con esigenze fuori standard\n"
             f"   - Cita 1-2 clienti del portfolio già attivi in quel settore come referenza credibile\n"
             f"     (usa solo clienti reali dal profilo: Alfa Laval Olmi, Cameron Italy, SIAD, Boldrocchi, Emerson, Solvay, ecc.)\n"
             f"   - Evidenzia i punti di forza più rilevanti per quel cliente: piccole serie, "

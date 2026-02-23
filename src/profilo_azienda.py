@@ -11,6 +11,24 @@ CAPACITÀ PRODUTTIVE
 - Tornitura CNC
 Produzione orientata a piccole e medie serie, pezzi speciali su disegno cliente.
 
+CAPACITÀ TECNICHE DI PRODUZIONE (range dimensionali)
+Stampaggio a caldo:
+- Range diametri: da M6-M8 fino a M80
+- Lunghezza massima viti: circa 800 mm
+- Tiranti: nessun limite di lunghezza pratico
+
+Tornitura CNC:
+- Range diametri: oltre M80, senza limiti superiori particolari
+- Adatta a diametri grandi e grandissimi su disegno cliente
+
+VANTAGGI COMPETITIVI PER SEGMENTO DIMENSIONALE
+- Diametri piccoli (M6–M80): vantaggio competitivo soprattutto su acciai speciali e superleghe
+  (B7, L7, 42CD4, Inconel, Monel, Hastelloy) dove la distribuzione commerciale non arriva.
+  Su materiali standard la concorrenza commerciale è alta.
+- Diametri grandi (>M80): vantaggio competitivo anche su materiali comuni, perché queste
+  dimensioni sono normalmente introvabili nei canali distributivi standard. Il mercato di
+  riferimento è quasi esclusivamente la produzione su ordine.
+
 PRODOTTI PRINCIPALI
 - Viti TE (testa esagonale) in esecuzioni speciali
 - Tiranti (threaded rods) su misura
