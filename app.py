@@ -471,6 +471,7 @@ for key, default in [
     ("ultima_pagina_radio", PAGINE[0]),
     ("risultato_contatti_campagna", None),
     ("risultato_email_campagna", None),
+    ("leads_per_campagna", []),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -500,6 +501,7 @@ with st.sidebar:
     if n_pending > 0:
         st.caption(f"📬 {n_pending} lead pronti per la campagna")
         if st.button("📧 Avvia campagna email", use_container_width=True, type="primary"):
+            st.session_state.leads_per_campagna = leads_pending
             st.session_state.campagna_attiva = True
             st.rerun()
     else:
@@ -625,26 +627,147 @@ elif pagina == "📊 Lead salvati":
     if not tutti_leads:
         st.info("Nessun lead ancora. Avvia una ricerca dalla pagina **Nuova ricerca**.")
     else:
-        # Filtro stato
-        stati_opzioni = ["Tutti", "da_contattare", "contattato", "non_interessante"]
-        col_f1, col_f2 = st.columns([2, 3])
+        STATI_LS = ["da_contattare", "contattato", "non_interessante"]
+        STATO_ICON_LS = {"da_contattare": "📬", "contattato": "✅", "non_interessante": "❌"}
+
+        # ── Valori unici per dropdown filtri ──────────────────────────────────
+        settori_unici = sorted(set(l.get("settore", "") for l in tutti_leads if l.get("settore")))
+        aree_uniche = sorted(set(l.get("area_ricerca", "") for l in tutti_leads if l.get("area_ricerca")))
+
+        # ── Riga 1: filtri testuali ───────────────────────────────────────────
+        col_f1, col_f2, col_f3, col_f4 = st.columns([1, 1.3, 1.3, 1.2])
         with col_f1:
-            filtro_stato = st.selectbox("Filtra per stato", stati_opzioni)
+            filtro_stato = st.selectbox("Stato", ["Tutti"] + STATI_LS)
         with col_f2:
+            filtro_settore = st.selectbox("Settore", ["Tutti"] + settori_unici)
+        with col_f3:
+            filtro_area = st.selectbox("Paese / Area", ["Tutte"] + aree_uniche)
+        with col_f4:
+            ordina = st.selectbox("Ordina per", ["Score ↓", "Nome ↑", "Data ↓", "Paese ↑"])
+
+        # ── Riga 2: slider score + contatori ─────────────────────────────────
+        col_sl, col_cnt = st.columns([3, 2])
+        with col_sl:
+            score_min = st.slider("Score minimo", min_value=1, max_value=10, value=1)
+        with col_cnt:
             st.caption(
-                f"📬 da_contattare: {sum(1 for l in tutti_leads if l.get('stato') == 'da_contattare')}  "
-                f"| ✅ contattato: {sum(1 for l in tutti_leads if l.get('stato') == 'contattato')}  "
-                f"| ❌ non_interessante: {sum(1 for l in tutti_leads if l.get('stato') == 'non_interessante')}"
+                f"📬 {sum(1 for l in tutti_leads if l.get('stato') == 'da_contattare')} da_contattare  "
+                f"| ✅ {sum(1 for l in tutti_leads if l.get('stato') == 'contattato')} contattato  "
+                f"| ❌ {sum(1 for l in tutti_leads if l.get('stato') == 'non_interessante')} non_interessante"
             )
 
-        if filtro_stato == "Tutti":
-            leads_filtrati = tutti_leads
-        else:
-            leads_filtrati = [l for l in tutti_leads if l.get("stato") == filtro_stato]
+        # ── Applica filtri ────────────────────────────────────────────────────
+        leads_filtrati = tutti_leads
+        if filtro_stato != "Tutti":
+            leads_filtrati = [l for l in leads_filtrati if l.get("stato") == filtro_stato]
+        if filtro_settore != "Tutti":
+            leads_filtrati = [l for l in leads_filtrati if l.get("settore") == filtro_settore]
+        if filtro_area != "Tutte":
+            leads_filtrati = [l for l in leads_filtrati if l.get("area_ricerca") == filtro_area]
+        leads_filtrati = [l for l in leads_filtrati if l.get("score", 0) >= score_min]
 
-        st.markdown(f"**{len(leads_filtrati)} lead** trovati")
+        # ── Applica ordinamento ───────────────────────────────────────────────
+        if ordina == "Score ↓":
+            leads_filtrati = sorted(leads_filtrati, key=lambda l: l.get("score", 0), reverse=True)
+        elif ordina == "Nome ↑":
+            leads_filtrati = sorted(leads_filtrati, key=lambda l: l.get("nome", "").lower())
+        elif ordina == "Data ↓":
+            leads_filtrati = sorted(leads_filtrati, key=lambda l: l.get("data_ricerca", ""), reverse=True)
+        elif ordina == "Paese ↑":
+            leads_filtrati = sorted(leads_filtrati, key=lambda l: l.get("area_ricerca", "").lower())
+
         st.divider()
-        _mostra_leads(leads_filtrati, allow_stato_change=True)
+
+        # ── Barra azioni: conteggio + seleziona/deseleziona ───────────────────
+        col_cnt2, col_sa, col_da = st.columns([3, 1.2, 1])
+        with col_cnt2:
+            st.markdown(f"**{len(leads_filtrati)}** lead trovati")
+        with col_sa:
+            if st.button("☑ Seleziona tutti i filtrati", use_container_width=True):
+                for l in leads_filtrati:
+                    st.session_state[f"sel_{l.get('id', 0)}"] = True
+                st.rerun()
+        with col_da:
+            if st.button("☐ Deseleziona tutti", use_container_width=True):
+                for l in tutti_leads:
+                    st.session_state[f"sel_{l.get('id', 0)}"] = False
+                st.rerun()
+
+        st.divider()
+
+        # ── Lista lead con checkbox ───────────────────────────────────────────
+        for lead in leads_filtrati:
+            score = lead.get("score", 0)
+            badge = "🟢" if score >= 7 else "🟡" if score >= 4 else "🔴"
+            stato = lead.get("stato", "da_contattare")
+            icona_stato = STATO_ICON_LS.get(stato, "📬")
+            lead_id = lead.get("id", 0)
+            default_checked = (stato == "da_contattare")
+
+            col_cb, col_main = st.columns([0.04, 0.96])
+            with col_cb:
+                st.checkbox(
+                    label="seleziona",
+                    value=default_checked,
+                    key=f"sel_{lead_id}",
+                    label_visibility="collapsed"
+                )
+            with col_main:
+                label = (
+                    f"{badge} {lead.get('nome', 'N/D')} — {lead.get('citta', '')} "
+                    f"| Score: {score}/10 | {icona_stato} {stato}"
+                )
+                with st.expander(label, expanded=False):
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.markdown(f"**Settore:** {lead.get('settore', 'N/D')}")
+                        st.markdown(f"**Sito:** {lead.get('sito', 'N/D')}")
+                        st.markdown(f"**Descrizione:** {lead.get('descrizione', 'N/D')}")
+                        if lead.get("notizie_recenti") and lead["notizie_recenti"] != "Nessuna notizia recente trovata":
+                            st.markdown(f"**Notizie recenti:** {lead['notizie_recenti']}")
+                        if lead.get("motivazione_score"):
+                            st.caption(f"Score motivazione: {lead['motivazione_score']}")
+                        if lead.get("data_ricerca"):
+                            st.caption(f"Ricerca: {lead['data_ricerca']} | Area: {lead.get('area_ricerca', 'N/D')}")
+                    with col2:
+                        try:
+                            idx = STATI_LS.index(stato)
+                        except ValueError:
+                            idx = 0
+                        nuovo_stato = st.selectbox(
+                            "Stato",
+                            STATI_LS,
+                            index=idx,
+                            key=f"stato_{lead_id}"
+                        )
+                        if nuovo_stato != stato:
+                            aggiorna_stato_lead(lead_id, nuovo_stato)
+                            st.rerun()
+
+        st.divider()
+
+        # ── Bottone campagna ──────────────────────────────────────────────────
+        leads_selezionati = [
+            l for l in tutti_leads
+            if st.session_state.get(f"sel_{l.get('id', 0)}", l.get("stato") == "da_contattare")
+        ]
+        n_sel = len(leads_selezionati)
+
+        if n_sel > 0:
+            if st.button(
+                f"📧 Avvia campagna email per {n_sel} selezionati",
+                type="primary",
+                use_container_width=True
+            ):
+                st.session_state.leads_per_campagna = leads_selezionati
+                st.session_state.campagna_attiva = True
+                st.rerun()
+        else:
+            st.button(
+                "📧 Avvia campagna email per i selezionati",
+                disabled=True,
+                use_container_width=True
+            )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -654,7 +777,10 @@ elif pagina == "campagna_email":
     st.title("📧 Campagna Email")
     st.subheader("Fase 2 — Contact Hunter + Email Sender")
 
-    leads_da_contattare = [l for l in carica_leads() if l.get("stato") == "da_contattare"]
+    leads_per_campagna = st.session_state.get("leads_per_campagna") or []
+    leads_da_contattare = leads_per_campagna if leads_per_campagna else [
+        l for l in carica_leads() if l.get("stato") == "da_contattare"
+    ]
 
     if not leads_da_contattare:
         st.info("Nessun lead con stato **da_contattare**. Modifica gli stati dalla pagina Lead salvati.")
@@ -711,6 +837,7 @@ elif pagina == "campagna_email":
             if st.button("🔄 Nuova campagna (reset risultati)"):
                 st.session_state.risultato_contatti_campagna = None
                 st.session_state.risultato_email_campagna = None
+                st.session_state.leads_per_campagna = []
                 st.session_state.campagna_attiva = False
                 st.rerun()
 
