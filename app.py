@@ -15,15 +15,15 @@ from profilo_azienda import PROFILO_AZIENDA
 load_dotenv()
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
-def kickoff_con_retry(crew, max_tentativi=5, attesa=30):
+def kickoff_con_retry(crew, max_tentativi=3, attesa=30):
     for tentativo in range(1, max_tentativi + 1):
         try:
             return str(crew.kickoff())
         except Exception as e:
             msg = str(e)
-            is_529 = "529" in msg or "overloaded" in msg.lower()
-            if is_529 and tentativo < max_tentativi:
-                st.warning(f"Server sovraccarico, riprovo... (tentativo {tentativo}/{max_tentativi})")
+            is_overloaded = "529" in msg or "500" in msg or "overloaded" in msg.lower()
+            if is_overloaded and tentativo < max_tentativi:
+                st.warning(f"Server Anthropic sovraccarico, riprovo tra 30 secondi... (tentativo {tentativo}/{max_tentativi})")
                 time.sleep(attesa)
             else:
                 raise
@@ -107,6 +107,28 @@ html, body, [data-testid="stAppViewContainer"],
     background: rgba(59,130,246,0.08);
     border-left-color: var(--accent);
     padding-left: 16px;
+}
+
+/* ── Code blocks in sidebar (expander Profilo Azienda) ── */
+[data-testid="stSidebar"] pre,
+[data-testid="stSidebar"] code,
+[data-testid="stSidebar"] .stCodeBlock,
+[data-testid="stSidebar"] .stCodeBlock > div,
+[data-testid="stSidebar"] .stCodeBlock pre,
+[data-testid="stSidebar"] .highlight,
+[data-testid="stSidebar"] .highlight pre,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] pre,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] code {
+    background-color: var(--bg-main) !important;
+    color: var(--text-prim) !important;
+    border: 1px solid var(--border) !important;
+}
+/* forza tutti gli span di colorazione sintattica a testo leggibile */
+[data-testid="stSidebar"] pre span,
+[data-testid="stSidebar"] code span,
+[data-testid="stSidebar"] .highlight span {
+    color: var(--text-prim) !important;
+    background: transparent !important;
 }
 
 /* ── Main content area ─────────────────────────────── */
