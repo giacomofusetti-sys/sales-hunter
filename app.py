@@ -684,6 +684,8 @@ elif pagina == "📊 Lead salvati":
             st.markdown(f"**{len(leads_filtrati)}** lead trovati")
         with col_sa:
             if st.button("☑ Seleziona tutti i filtrati", use_container_width=True):
+                for l in tutti_leads:
+                    st.session_state[f"sel_{l.get('id', 0)}"] = False
                 for l in leads_filtrati:
                     st.session_state[f"sel_{l.get('id', 0)}"] = True
                 st.rerun()
