@@ -2,7 +2,8 @@ import json
 import os
 from datetime import datetime
 
-DB_FILE = "leads.json"
+# Path assoluto: funziona sia in locale che su Streamlit Cloud
+DB_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "leads.json")
 
 
 def carica_db():
