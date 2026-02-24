@@ -178,35 +178,73 @@ def _parse_email_per_lead(testo_email, leads):
         return {}
 
     risultato = {}
-    # Split on lines containing only '===' (3+ equals signs)
-    blocks = re.split(r'(?:^|\n)={3,}\s*(?:\n|$)', testo_email)
 
-    for block in blocks:
-        block = block.strip()
-        if not block or len(block) < 50:
-            continue
+    # Try multiple separator patterns in order of preference
+    sep_patterns = [
+        r'(?:^|\n)={3,}\s*(?:\n|$)',   # ===
+        r'(?:^|\n)-{3,}\s*(?:\n|$)',   # ---
+        r'(?:^|\n)#{3,}\s*(?:\n|$)',   # ###
+    ]
+    blocks = []
+    for sep in sep_patterns:
+        parts = [b.strip() for b in re.split(sep, testo_email) if b.strip() and len(b.strip()) > 50]
+        if len(parts) >= 1:
+            blocks = parts
+            break
 
-        match = re.search(r'AZIENDA:\s*(.+)', block, re.IGNORECASE)
-        if not match:
-            continue
-        nome_nel_blocco = match.group(1).strip()
+    # If no separator found, treat entire text as one block (single-lead case)
+    if not blocks:
+        blocks = [testo_email.strip()] if len(testo_email.strip()) > 50 else []
 
-        for lead in leads:
-            lead_id = lead.get("id")
+    def _match_lead(nome_nel_blocco, leads_list, already_matched):
+        """Returns (lead_id, lead) for the first matching unmatched lead, or None."""
+        for lead in leads_list:
+            lid = lead.get("id")
+            if lid in already_matched:
+                continue
             nome_lead = lead.get("nome", "")
             if not nome_lead:
                 continue
-            if (
-                nome_lead.lower() in nome_nel_blocco.lower()
-                or nome_nel_blocco.lower() in nome_lead.lower()
-            ):
-                risultato[lead_id] = block
-                break
-            # Partial word match
+            nl = nome_lead.lower()
+            nb = nome_nel_blocco.lower()
+            if nl in nb or nb in nl:
+                return lid
             parole = [w for w in nome_lead.split() if len(w) > 3]
-            if any(p.lower() in nome_nel_blocco.lower() for p in parole):
-                risultato[lead_id] = block
+            if any(p.lower() in nb for p in parole):
+                return lid
+        return None
+
+    # First pass: match blocks that have an AZIENDA: header
+    unmatched_blocks = []
+    for block in blocks:
+        # Support AZIENDA:, **AZIENDA:**, ## AZIENDA: etc.
+        match = re.search(r'(?:\*{0,2}#{0,3}\s*)AZIENDA:\*{0,2}\s*(.+)', block, re.IGNORECASE)
+        if not match:
+            unmatched_blocks.append(block)
+            continue
+        nome_nel_blocco = match.group(1).strip().strip('*#').strip()
+        lid = _match_lead(nome_nel_blocco, leads, risultato)
+        if lid is not None:
+            risultato[lid] = block
+
+    # Second pass: for any remaining unmatched block, try matching by lead name anywhere in the block
+    unmatched_leads = [l for l in leads if l.get("id") not in risultato]
+    for block in unmatched_blocks:
+        if not unmatched_leads:
+            break
+        for lead in unmatched_leads:
+            nome_lead = lead.get("nome", "")
+            if not nome_lead:
+                continue
+            parole = [w for w in nome_lead.split() if len(w) > 3]
+            if nome_lead.lower() in block.lower() or any(p.lower() in block.lower() for p in parole):
+                risultato[lead.get("id")] = block
+                unmatched_leads = [l for l in unmatched_leads if l.get("id") != lead.get("id")]
                 break
+
+    # Last resort: single lead, single block
+    if not risultato and len(leads) == 1 and len(blocks) == 1:
+        risultato[leads[0].get("id")] = blocks[0]
 
     return risultato
 
@@ -645,6 +683,7 @@ for key, default in [
     ("risultato_contatti_campagna", None),
     ("risultato_email_campagna", None),
     ("leads_per_campagna", []),
+    ("debug_email_campagna", None),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -1030,32 +1069,82 @@ elif pagina == "campagna_email":
         # Step 2 — Email Sender
         if not st.session_state.risultato_email_campagna:
             if st.button("✉️ Genera email personalizzate", type="primary", use_container_width=True):
+                # Debug: snapshot of what will be passed to the email composer
+                leads_info_debug = "\n".join([
+                    f"• {l.get('nome','?')} | score={l.get('score','?')} | "
+                    f"desc={'✓' if l.get('descrizione') else '✗ MANCANTE'} | "
+                    f"notizie={'✓' if l.get('notizie_recenti') else '✗ MANCANTI'} | "
+                    f"sito={l.get('sito','?')}"
+                    for l in leads_da_contattare
+                ])
+                contatti_debug = str(st.session_state.risultato_contatti_campagna)
+
                 with st.spinner("✉️ Email Sender: redazione email in corso..."):
                     email_sender = crea_email_sender(max_iter=6)
                     task_email = crea_task_email(
                         email_sender,
                         leads_da_contattare,
-                        str(st.session_state.risultato_contatti_campagna)
+                        contatti_debug
                     )
                     crew_e = Crew(agents=[email_sender], tasks=[task_email], verbose=False)
                     st.session_state.risultato_email_campagna = kickoff_con_retry(crew_e)
-                # Salva email e aggiorna stato a "email_pronta" in leads.json
+
+                # Parse and save emails
                 email_per_lead = _parse_email_per_lead(
                     str(st.session_state.risultato_email_campagna), leads_da_contattare
                 )
+
+                # Store debug info in session state (visible after rerun)
+                st.session_state.debug_email_campagna = {
+                    "leads_debug": leads_info_debug,
+                    "contatti_preview": contatti_debug[:600],
+                    "output_raw": str(st.session_state.risultato_email_campagna)[:3000],
+                    "parsed_count": len(email_per_lead),
+                    "total": len(leads_da_contattare),
+                    "parsed_nomi": [
+                        next((l["nome"] for l in leads_da_contattare if l["id"] == lid), str(lid))
+                        for lid in email_per_lead
+                    ],
+                }
+
+                # BUG FIX: set "email_pronta" only for leads where email was actually parsed;
+                # leave others as "da_contattare" so they remain actionable
                 aggiorna_leads_campagna({
                     l["id"]: {
                         "email_generate": (
                             [email_per_lead[l["id"]]] if l["id"] in email_per_lead else []
                         ),
-                        "stato": "email_pronta",
+                        "stato": "email_pronta" if l["id"] in email_per_lead else l.get("stato", "da_contattare"),
                     }
                     for l in leads_da_contattare
                 })
                 st.rerun()
         else:
-            st.success("✅ Email generate! Lead aggiornati a stato **email_pronta**.")
+            n_parsed = st.session_state.debug_email_campagna.get("parsed_count", "?") if st.session_state.debug_email_campagna else "?"
+            n_total = st.session_state.debug_email_campagna.get("total", "?") if st.session_state.debug_email_campagna else "?"
+            if isinstance(n_parsed, int) and isinstance(n_total, int) and n_parsed < n_total:
+                st.warning(f"⚠️ Email generate solo per {n_parsed}/{n_total} lead. Verifica il debug qui sotto.")
+            else:
+                st.success("✅ Email generate! Lead aggiornati a stato **email_pronta**.")
             st.info("Vai a **📧 Email pronte** dalla sidebar per rivedere, modificare e segnare come contattati.")
+
+            # Debug expander — always shown after generation, expanded if there were parse failures
+            if st.session_state.debug_email_campagna:
+                dbg = st.session_state.debug_email_campagna
+                parse_ok = dbg.get("parsed_count", 0) == dbg.get("total", 0)
+                with st.expander(
+                    f"🔍 Debug Email Sender: {dbg.get('parsed_count',0)}/{dbg.get('total',0)} email parsate"
+                    + (" ✅" if parse_ok else " ⚠️ parsing incompleto"),
+                    expanded=not parse_ok
+                ):
+                    st.markdown("**Dati passati all'Email Sender:**")
+                    st.code(dbg.get("leads_debug", ""), language=None)
+                    st.markdown("**Contatti passati (anteprima 600 chars):**")
+                    st.code(dbg.get("contatti_preview", ""), language=None)
+                    st.markdown(f"**Output grezzo LLM (prime 3000 chars):**")
+                    st.code(dbg.get("output_raw", ""), language=None)
+                    if dbg.get("parsed_nomi"):
+                        st.markdown(f"**Lead con email parsata:** {', '.join(dbg['parsed_nomi'])}")
 
             if st.button("🔄 Nuova campagna (reset risultati)"):
                 st.session_state.risultato_contatti_campagna = None
