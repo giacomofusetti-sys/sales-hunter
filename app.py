@@ -31,6 +31,14 @@ def kickoff_con_retry(crew, max_tentativi=3, attesa=30):
     for tentativo in range(1, max_tentativi + 1):
         try:
             return str(crew.kickoff())
+        except ValueError as e:
+            msg = str(e)
+            if "Invalid response from LLM call" in msg or "None or empty" in msg:
+                return (
+                    "Ricerca incompleta: l'agente ha esaurito il numero massimo di operazioni. "
+                    "Riprovare o aumentare il numero di aziende cercate."
+                )
+            raise
         except Exception as e:
             msg = str(e)
             is_overloaded = "529" in msg or "500" in msg or "overloaded" in msg.lower()
@@ -739,7 +747,7 @@ if pagina == "🔍 Nuova ricerca":
         if clienti_esistenti:
             st.caption(f"⚠️ Verranno esclusi {len(clienti_esistenti)} clienti già esistenti")
 
-        max_iter = num_aziende * 4
+        max_iter = num_aziende * 6
 
         # Step 1 — Prospector
         with st.spinner("🔍 Prospector: ricerca aziende in corso..."):
@@ -970,7 +978,7 @@ elif pagina == "campagna_email":
 
     st.divider()
 
-    max_iter_c = len(leads_da_contattare) * 4
+    max_iter_c = len(leads_da_contattare) * 6
 
     # Step 1 — Contact Hunter
     if not st.session_state.risultato_contatti_campagna:
