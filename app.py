@@ -4,7 +4,7 @@ import sys
 import time
 
 # load_dotenv PRIMA di qualsiasi import che usa os.getenv a livello di modulo
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 from dotenv import load_dotenv
 load_dotenv()
 os.environ.setdefault("SERPER_API_KEY", os.getenv("SERPER_API_KEY") or "")
