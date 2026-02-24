@@ -65,6 +65,8 @@ def salva_leads(nuovi_leads, settore, area):
         lead.setdefault("settore", settore)
         lead["area_ricerca"] = area
         lead.setdefault("stato", "da_contattare")
+        lead.setdefault("contatti_trovati", [])
+        lead.setdefault("email_generate", [])
 
     db.setdefault("leads", []).extend(nuovi_leads)
     salva_db(db)
@@ -84,5 +86,19 @@ def aggiorna_stato_lead(lead_id, nuovo_stato):
         if lead.get("id") == lead_id:
             lead["stato"] = nuovo_stato
             break
+    salva_db(db)
+
+
+def aggiorna_leads_campagna(aggiornamenti):
+    """Aggiornamento bulk dei lead dopo la campagna email.
+
+    aggiornamenti: dict {lead_id: {campo: valore, ...}}
+    Campi supportati: contatti_trovati, email_generate, stato (e qualsiasi altro).
+    """
+    db = carica_db()
+    for lead in db.get("leads", []):
+        lead_id = lead.get("id")
+        if lead_id in aggiornamenti:
+            lead.update(aggiornamenti[lead_id])
     salva_db(db)
 

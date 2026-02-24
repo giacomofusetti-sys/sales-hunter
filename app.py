@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 
@@ -20,6 +21,7 @@ from analyst import crea_analyst, crea_task_analisi, parse_leads_json
 from database import (
     salva_leads, carica_leads, aggiorna_stato_lead,
     aggiungi_cliente_esistente, carica_clienti_esistenti,
+    aggiorna_leads_campagna,
 )
 from profilo_azienda import PROFILO_AZIENDA
 
@@ -36,6 +38,143 @@ def kickoff_con_retry(crew, max_tentativi=3, attesa=30):
                 time.sleep(attesa)
             else:
                 raise
+
+
+def _parse_contatti_per_lead(testo_contatti, leads):
+    """Parsa l'output del Contact Hunter e restituisce {lead_id: [contatto_dict]}."""
+    if not testo_contatti:
+        return {l.get("id"): [] for l in leads}
+
+    risultato = {}
+    lines = testo_contatti.split('\n')
+    role_keywords = [
+        'responsabile', 'manager', 'direttore', 'director', 'head',
+        'chief', 'procurement', 'acquisti', 'tecnico', 'operations',
+        'purchasing', 'supply chain', 'ceo', 'cto', 'coo', 'vp', 'vice',
+    ]
+
+    for lead in leads:
+        lead_id = lead.get("id")
+        nome_lead = lead.get("nome", "")
+        if not nome_lead:
+            risultato[lead_id] = []
+            continue
+
+        # Find the line in the text that first mentions this company
+        section_start = None
+        for i, line in enumerate(lines):
+            if nome_lead.lower() in line.lower():
+                section_start = i
+                break
+
+        if section_start is None:
+            # Fallback: match on the longest word (>3 chars) of the company name
+            parole = [w for w in nome_lead.split() if len(w) > 3]
+            for parola in parole:
+                for i, line in enumerate(lines):
+                    if parola.lower() in line.lower():
+                        section_start = i
+                        break
+                if section_start is not None:
+                    break
+
+        if section_start is None:
+            risultato[lead_id] = []
+            continue
+
+        # Find section end: next company mention or at most 15 lines
+        section_end = min(section_start + 15, len(lines))
+        other_leads = [l for l in leads if l.get("id") != lead_id and l.get("nome")]
+        for j in range(section_start + 2, section_end):
+            for other in other_leads:
+                if other["nome"].lower() in lines[j].lower():
+                    section_end = j
+                    break
+            else:
+                continue
+            break
+
+        section_text = '\n'.join(lines[section_start:section_end])
+
+        contatto = {"nome_contatto": "", "ruolo": "", "email": "", "telefono": ""}
+
+        # Email
+        emails_found = re.findall(r'\b[\w.+\-]+@[\w.\-]+\.\w+\b', section_text)
+        if emails_found:
+            contatto["email"] = emails_found[0]
+
+        # Phone (sequence of 7+ digits, possibly with spaces/dashes)
+        for phone_match in re.finditer(r'(?:\+?[\d][\d\s\-\.\(\)]{6,})', section_text):
+            cleaned = re.sub(r'[\s\-\.\(\)]', '', phone_match.group())
+            if len(cleaned) >= 7 and cleaned.lstrip('+').isdigit():
+                contatto["telefono"] = phone_match.group().strip()
+                break
+
+        # Name and role from individual lines
+        for line in lines[section_start:section_end]:
+            stripped = line.strip(' -•:*\t')
+            if not stripped or '@' in stripped:
+                continue
+            if re.search(r'\d{5,}', stripped):
+                continue
+            lower = stripped.lower()
+            if any(kw in lower for kw in role_keywords):
+                if not contatto["ruolo"]:
+                    contatto["ruolo"] = stripped
+            elif (
+                not contatto["nome_contatto"]
+                and 2 <= len(stripped.split()) <= 4
+                and stripped[0].isupper()
+                and nome_lead.lower() not in lower
+                and not any(kw in lower for kw in ['sito', 'http', 'www', 'email', 'tel', 'fax', 'phone'])
+            ):
+                contatto["nome_contatto"] = stripped
+
+        if any(v for v in contatto.values()):
+            risultato[lead_id] = [contatto]
+        else:
+            risultato[lead_id] = []
+
+    return risultato
+
+
+def _parse_email_per_lead(testo_email, leads):
+    """Parsa l'output dell'Email Sender e restituisce {lead_id: email_string}."""
+    if not testo_email:
+        return {}
+
+    risultato = {}
+    # Split on lines containing only '===' (3+ equals signs)
+    blocks = re.split(r'(?:^|\n)={3,}\s*(?:\n|$)', testo_email)
+
+    for block in blocks:
+        block = block.strip()
+        if not block or len(block) < 50:
+            continue
+
+        match = re.search(r'AZIENDA:\s*(.+)', block, re.IGNORECASE)
+        if not match:
+            continue
+        nome_nel_blocco = match.group(1).strip()
+
+        for lead in leads:
+            lead_id = lead.get("id")
+            nome_lead = lead.get("nome", "")
+            if not nome_lead:
+                continue
+            if (
+                nome_lead.lower() in nome_nel_blocco.lower()
+                or nome_nel_blocco.lower() in nome_lead.lower()
+            ):
+                risultato[lead_id] = block
+                break
+            # Partial word match
+            parole = [w for w in nome_lead.split() if len(w) > 3]
+            if any(p.lower() in nome_nel_blocco.lower() for p in parole):
+                risultato[lead_id] = block
+                break
+
+    return risultato
 
 
 st.set_page_config(page_title="Sales Hunter", page_icon="🎯", layout="wide")
@@ -411,8 +550,8 @@ hr {
 
 # ── Funzione helper per mostrare lead ─────────────────────────────────────────
 def _mostra_leads(leads, allow_stato_change=True):
-    STATI = ["da_contattare", "contattato", "non_interessante"]
-    STATO_ICON = {"da_contattare": "📬", "contattato": "✅", "non_interessante": "❌"}
+    STATI = ["da_contattare", "email_pronta", "contattato", "non_interessante"]
+    STATO_ICON = {"da_contattare": "📬", "email_pronta": "✉️", "contattato": "✅", "non_interessante": "❌"}
 
     for lead in leads:
         score = lead.get("score", 0)
@@ -460,7 +599,7 @@ def _mostra_leads(leads, allow_stato_change=True):
 
 
 # ── Session state ─────────────────────────────────────────────────────────────
-PAGINE = ["🔍 Nuova ricerca", "📊 Lead salvati", "🚫 Clienti esistenti"]
+PAGINE = ["🔍 Nuova ricerca", "📊 Lead salvati", "📧 Email pronte", "🚫 Clienti esistenti"]
 
 for key, default in [
     ("risultato_ricerca", None),
@@ -495,9 +634,13 @@ with st.sidebar:
     st.divider()
 
     # ── Bottone Fase 2 ────────────────────────────────────────────────────────
-    leads_pending = [l for l in carica_leads() if l.get("stato") == "da_contattare"]
+    _tutti = carica_leads()
+    leads_pending = [l for l in _tutti if l.get("stato") == "da_contattare"]
     n_pending = len(leads_pending)
+    n_email_pronte = sum(1 for l in _tutti if l.get("stato") == "email_pronta")
 
+    if n_email_pronte > 0:
+        st.caption(f"✉️ {n_email_pronte} email pronte da inviare")
     if n_pending > 0:
         st.caption(f"📬 {n_pending} lead pronti per la campagna")
         if st.button("📧 Avvia campagna email", use_container_width=True, type="primary"):
@@ -505,7 +648,8 @@ with st.sidebar:
             st.session_state.campagna_attiva = True
             st.rerun()
     else:
-        st.caption("Nessun lead da contattare")
+        if n_email_pronte == 0:
+            st.caption("Nessun lead da contattare")
         st.button("📧 Avvia campagna email", use_container_width=True, disabled=True)
 
 # ── Routing ───────────────────────────────────────────────────────────────────
@@ -627,8 +771,8 @@ elif pagina == "📊 Lead salvati":
     if not tutti_leads:
         st.info("Nessun lead ancora. Avvia una ricerca dalla pagina **Nuova ricerca**.")
     else:
-        STATI_LS = ["da_contattare", "contattato", "non_interessante"]
-        STATO_ICON_LS = {"da_contattare": "📬", "contattato": "✅", "non_interessante": "❌"}
+        STATI_LS = ["da_contattare", "email_pronta", "contattato", "non_interessante"]
+        STATO_ICON_LS = {"da_contattare": "📬", "email_pronta": "✉️", "contattato": "✅", "non_interessante": "❌"}
 
         # ── Valori unici per dropdown filtri ──────────────────────────────────
         settori_unici = sorted(set(l.get("settore", "") for l in tutti_leads if l.get("settore")))
@@ -652,6 +796,7 @@ elif pagina == "📊 Lead salvati":
         with col_cnt:
             st.caption(
                 f"📬 {sum(1 for l in tutti_leads if l.get('stato') == 'da_contattare')} da_contattare  "
+                f"| ✉️ {sum(1 for l in tutti_leads if l.get('stato') == 'email_pronta')} email_pronta  "
                 f"| ✅ {sum(1 for l in tutti_leads if l.get('stato') == 'contattato')} contattato  "
                 f"| ❌ {sum(1 for l in tutti_leads if l.get('stato') == 'non_interessante')} non_interessante"
             )
@@ -809,6 +954,14 @@ elif pagina == "campagna_email":
                 task_contatti = crea_task_contatti_lead(contact_hunter, leads_da_contattare)
                 crew_c = Crew(agents=[contact_hunter], tasks=[task_contatti], verbose=False)
                 st.session_state.risultato_contatti_campagna = kickoff_con_retry(crew_c)
+            # Salva subito i contatti in leads.json (persistenza immediata)
+            contatti_per_lead = _parse_contatti_per_lead(
+                str(st.session_state.risultato_contatti_campagna), leads_da_contattare
+            )
+            aggiorna_leads_campagna({
+                l["id"]: {"contatti_trovati": contatti_per_lead.get(l["id"], [])}
+                for l in leads_da_contattare
+            })
             st.rerun()
     else:
         st.success("✅ Contatti trovati")
@@ -827,14 +980,23 @@ elif pagina == "campagna_email":
                     )
                     crew_e = Crew(agents=[email_sender], tasks=[task_email], verbose=False)
                     st.session_state.risultato_email_campagna = kickoff_con_retry(crew_e)
-                # Aggiorna stato lead a "contattato"
-                for l in leads_da_contattare:
-                    aggiorna_stato_lead(l["id"], "contattato")
+                # Salva email e aggiorna stato a "email_pronta" in leads.json
+                email_per_lead = _parse_email_per_lead(
+                    str(st.session_state.risultato_email_campagna), leads_da_contattare
+                )
+                aggiorna_leads_campagna({
+                    l["id"]: {
+                        "email_generate": (
+                            [email_per_lead[l["id"]]] if l["id"] in email_per_lead else []
+                        ),
+                        "stato": "email_pronta",
+                    }
+                    for l in leads_da_contattare
+                })
                 st.rerun()
         else:
-            st.success("✅ Email generate! Lead aggiornati a stato **contattato**.")
-            st.markdown("### ✉️ Email pronte")
-            st.markdown(st.session_state.risultato_email_campagna)
+            st.success("✅ Email generate! Lead aggiornati a stato **email_pronta**.")
+            st.info("Vai a **📧 Email pronte** dalla sidebar per rivedere, modificare e segnare come contattati.")
 
             if st.button("🔄 Nuova campagna (reset risultati)"):
                 st.session_state.risultato_contatti_campagna = None
@@ -846,6 +1008,97 @@ elif pagina == "campagna_email":
     if st.button("← Torna ai lead"):
         st.session_state.campagna_attiva = False
         st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# EMAIL PRONTE
+# ══════════════════════════════════════════════════════════════════════════════
+elif pagina == "📧 Email pronte":
+    st.title("📧 Email pronte")
+    st.subheader("Rivedi, modifica e segna come contattati")
+
+    tutti_leads = carica_leads()
+    leads_email_pronti = [l for l in tutti_leads if l.get("stato") == "email_pronta"]
+
+    if not leads_email_pronti:
+        st.info(
+            "Nessuna email pronta. Avvia una campagna email dalla pagina **Lead salvati** "
+            "o dalla sidebar per generare le email."
+        )
+    else:
+        st.caption(f"✉️ {len(leads_email_pronti)} lead con email pronte")
+        st.divider()
+
+        for lead in leads_email_pronti:
+            lead_id = lead.get("id")
+            score = lead.get("score", 0)
+            badge = "🟢" if score >= 7 else "🟡" if score >= 4 else "🔴"
+            contatti = lead.get("contatti_trovati", [])
+            email_generate = lead.get("email_generate", [])
+
+            label = f"{badge} {lead.get('nome', 'N/D')} — {lead.get('citta', '')} | Score: {score}/10"
+            with st.expander(label, expanded=True):
+                col_info, col_azioni = st.columns([3, 1])
+
+                with col_info:
+                    st.markdown(f"**Settore:** {lead.get('settore', 'N/D')}")
+                    st.markdown(f"**Sito:** {lead.get('sito', 'N/D')}")
+
+                    st.markdown("---")
+
+                    # ── Selettore contatti ────────────────────────────────
+                    if contatti:
+                        opzioni = [
+                            f"{c.get('nome_contatto', 'N/D')} — {c.get('ruolo', 'N/D')} ({c.get('email', 'N/D')})"
+                            for c in contatti
+                        ]
+                        idx_sel = st.selectbox(
+                            "Contatto selezionato",
+                            range(len(opzioni)),
+                            format_func=lambda i: opzioni[i],
+                            key=f"contatto_sel_{lead_id}",
+                        )
+                        c_sel = contatti[idx_sel]
+                        if c_sel.get("telefono"):
+                            st.caption(f"📞 {c_sel['telefono']}")
+                    else:
+                        st.warning("Nessun contatto strutturato trovato per questo lead.")
+                        idx_sel = 0
+
+                    # ── Email modificabile ────────────────────────────────
+                    if email_generate:
+                        email_idx = min(idx_sel, len(email_generate) - 1)
+                        email_testo = email_generate[email_idx]
+                    else:
+                        email_testo = ""
+
+                    st.text_area(
+                        "Email (modificabile prima dell'invio)",
+                        value=email_testo,
+                        height=350,
+                        key=f"email_edit_{lead_id}",
+                    )
+
+                with col_azioni:
+                    st.markdown(f"**Score:** {score}/10")
+                    if lead.get("motivazione_score"):
+                        st.caption(lead["motivazione_score"])
+                    st.markdown("---")
+                    if st.button(
+                        "✅ Segna come contattato",
+                        key=f"contattato_{lead_id}",
+                        use_container_width=True,
+                        type="primary",
+                    ):
+                        aggiorna_stato_lead(lead_id, "contattato")
+                        st.rerun()
+                    if st.button(
+                        "❌ Non interessante",
+                        key=f"non_int_{lead_id}",
+                        use_container_width=True,
+                    ):
+                        aggiorna_stato_lead(lead_id, "non_interessante")
+                        st.rerun()
 
 
 # ══════════════════════════════════════════════════════════════════════════════

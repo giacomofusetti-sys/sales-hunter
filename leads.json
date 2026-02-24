@@ -9,7 +9,7 @@
       "score": 9,
       "motivazione_score": "OEM leader mondiale nel settore heat exchangers con necessità critica di bulloneria speciale certificata (B7, L7, 42CD4, inox, superleghe) per apparecchiature a pressione. Recente acquisizione da Apollo Funds per €2 miliardi (agosto 2025) evidenzia solidità e espansione. Perfetta compatibilità con profilo fornitore: certificazioni riconosciute in Germania, materiali speciali, piccole serie customizzate.",
       "notizie_recenti": "Agosto 2025: Apollo Funds acquisisce Kelvion da Triton Partners per €2 miliardi; Marzo 2023: contratto maggiore per hydrogen production facility; 2024: Cascade Cooling System $31.5 milioni con data centre USA",
-      "stato": "da_contattare",
+      "stato": "contattato",
       "id": 1,
       "data_ricerca": "23/02/2026 16:16",
       "area_ricerca": "germania"
@@ -55,6 +55,48 @@
       "id": 4,
       "data_ricerca": "23/02/2026 16:16",
       "area_ricerca": "germania"
+    },
+    {
+      "nome": "Arsopi-Thermal",
+      "citta": "Vale de Cambra",
+      "settore": "Scambiatori di calore (PHE, semi-saldati, brazati)",
+      "sito": "https://www.arsopi-thermal.pt/",
+      "descrizione": "Produttore portoghese specializzato in scambiatori di calore a piastre (PHE) e semi-saldati. Fondata nel 1992, opera da Vale de Cambra ed è co-proprietaria del Gruppo Arsopi e del produttore giapponese Hisaka Works. Serve settori HVAC, alimenti e bevande, chimica, marina e industria generale con soluzioni complete e assistenza tecnica specializzata.",
+      "score": 8,
+      "motivazione_score": "Eccellente prospect nel settore scambiatori di calore con applicazioni in pressione e ambienti critici (marino, chimico, EPC). Produce su commessa richiedendo bulloneria certificata in acciai speciali (42CD4, B7, L7, inox 316/316L) su range M6-M80 e tiranti lunghi. Certificazioni ISO 9001, PED 2014/68/EU, ASME U STAMP garantiscono affidabilità. Partnership con Hisaka giapponese rafforza credibilità e accesso a nuovi mercati internazionali.",
+      "notizie_recenti": "Partecipazione a prestigiose esposizioni europee 2024 (BIEMH Bilbao, MCE Milano). Continua espansione con focus su efficienza energetica e soluzioni sostenibili. Renovazione web simulator per progettazione online scambiatori.",
+      "stato": "da_contattare",
+      "id": 5,
+      "data_ricerca": "24/02/2026 00:03",
+      "area_ricerca": "portugal"
+    },
+    {
+      "nome": "Centauro Internacional",
+      "citta": "Castelo Branco",
+      "settore": "Scambiatori di calore e sistemi di refrigerazione HVAC",
+      "sito": "https://www.centauro.pt/",
+      "descrizione": "Produttore portoghese di sistemi di refrigerazione e HVAC fondato nel 1978. Progetta e produce scambiatori di calore (coils, coolers, condensatori, dry coolers, gas coolers), racks di compressione e unità condensanti. Impianto di 40.000 mq con R&D, training e facilities di ingegneria. Presente globalmente in Europa, Africa, Sud America, Medio Oriente.",
+      "score": 7,
+      "motivazione_score": "Buon prospect per bulloneria certificata ad alte prestazioni. Produce componenti per applicazioni critiche in pressione e temperature elevate (condensatori, racks compressione, unità condensanti) che richiedono viti TE, tiranti e prigionieri in acciai legati (42CD4) e inossidabili per ambienti corrosivi e criogenici. Certificazioni ISO 9001:2015 e PED 2014/68/EU (Category II, III, IV), esperienza 45+ anni garantiscono serietà. Produzione customizzata su ordine allineata con capacità fornitore.",
+      "notizie_recenti": "Partecipazione a Chillventa 2024 e Climatización 2025 - principali fiere europee refrigerazione. Expansion globale confermata con focus sostenibilità e eco-friendly refrigeranti. Centro di sviluppo R&D attivo per innovazione tecnologica.",
+      "stato": "da_contattare",
+      "id": 6,
+      "data_ricerca": "24/02/2026 00:03",
+      "area_ricerca": "portugal"
+    },
+    {
+      "nome": "Metalmaco",
+      "citta": "Maceira (Leiria)",
+      "settore": "Ingegneria e manifattura industriale (scambiatori di calore customizzati)",
+      "sito": "https://metalmaco.com/",
+      "descrizione": "Azienda di ingegneria e manifattura portoghese con sede a Maceira, provincia di Leiria. Specializzata in scambiatori di calore customizzati e componenti metalliche complesse per applicazioni industriali critiche. Produce strutture in acciaio, impianti controllo oli/aria, piping, caldaie, ventilatori per settori industriali pesanti (cemento, vetro, carta, ceramica, agricolo).",
+      "score": 6,
+      "motivazione_score": "Prospect moderato con potenziale medio-alto. Produce scambiatori di calore su disegno cliente, richiedendo bulloneria speciale e personalizzata in acciai speciali (42CD4, B7, L7) e inossidabili per applicazioni ad alta temperatura e pressione. Localizzazione in Leiria (zona industriale centrale) indica forte concentrazione settore manifatturiero pesante. Produzione customizzata e piccole/medie serie allineate con profilo fornitore, ma informazioni pubbliche limitate e assenza certificazioni PED/ISO trasparenti riducono score.",
+      "notizie_recenti": "Notizie pubbliche recenti molto limitate. Portafoglio clienti diversificato in settori cemento, vetro, carta, ceramica. Azienda fondata 1998, ancora attiva nel mercato portoghese industriale locale.",
+      "stato": "da_contattare",
+      "id": 7,
+      "data_ricerca": "24/02/2026 00:03",
+      "area_ricerca": "portugal"
     }
   ],
   "clienti_esistenti": [],
