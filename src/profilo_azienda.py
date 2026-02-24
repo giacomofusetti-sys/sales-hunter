@@ -57,20 +57,48 @@ PUNTI DI FORZA
 - Disponibilità di materiali particolari e certificati (B7, L7, superleghe)
 - Problem solving tecnico: supporto nella scelta del materiale e del trattamento
 - Tracciabilità completa del materiale con certificati di collaudo
+- Produzione europea (Italia): esente da CBAM — nessun onere amministrativo o finanziario
+  per certificati di carbonio sulle importazioni di viteria prodotta in Europa
 
-CERTIFICAZIONI
+CERTIFICAZIONI ATTUALI
 - ISO 9001 (sistema di gestione qualità)
 - TÜV SÜD (certificazione internazionale riconosciuta in Germania e nel Nord Europa)
+
+CERTIFICAZIONI IN FASE DI ACQUISIZIONE
+- Norsok (in fase di qualifica) — apre mercato offshore Norvegia e Mare del Nord
+- Saudi Aramco Approved Vendor List (qualifica in corso) — accesso al mercato saudita
+- ADNOC Approved Vendor List (qualifica in corso) — accesso al mercato Abu Dhabi / UAE
 
 SETTORI CLIENTI ATTUALI
 - Scambiatori di calore (heat exchangers)
 - Valvole industriali
 - Carpenterie metalliche
-- Impianti oil & gas
+- Impianti oil & gas e compressori
 - Impianti industriali e chimici
 - Energia (convenzionale e rinnovabile)
 - Movimento terra e macchine operatrici
 - Manutenzioni industriali
+- Caldareria e serbatoi in pressione
+- EPC Contractor / Engineering companies
+
+SETTORI PRIORITARI 2026 (budget commerciale in crescita)
+I seguenti settori hanno ricevuto la massima priorità commerciale per il 2026:
+- Valvole industriali (+58% budget rispetto anno precedente) — priorità MASSIMA
+- Impianti oil & gas e compressori (+30%) — priorità ALTA
+- Energia e rinnovabili (+33%) — priorità ALTA
+- Idrogeno e CCUS — settore emergente, forte potenziale per materiali anticorrosione
+- Trattamento emissioni (aria/acqua) — crescita regolamentare spinta da normative ambientali EU
+- Middle East (Arabia Saudita, UAE, GCC) — espansione geografica prioritaria 2026
+
+ARGOMENTI COMMERCIALI CHIAVE
+- CBAM (Carbon Border Adjustment Mechanism): acquistare viteria da un produttore italiano
+  significa essere esenti dagli oneri amministrativi e finanziari del CBAM — nessun certificato
+  di carbonio richiesto per la viteria prodotta in Europa. Vantaggio significativo per prospect
+  che importano da Asia o Est Europa.
+- Materiali anticorrosione per ambienti aggressivi (offshore, idrogeno, CCUS, petrolchimico):
+  inox 316L, duplex, superleghe Inconel/Hastelloy con tracciabilità completa e certificati MTR.
+- Capacità produttiva su misura senza minimi d'ordine elevati: ideale per EPC e engineering companies
+  che lavorano su commessa e non possono standardizzare i componenti di fissaggio.
 
 CLIENTI DI RIFERIMENTO (portfolio attuale)
 Questi sono clienti reali già acquisiti, a conferma della credibilità e del posizionamento
@@ -91,14 +119,20 @@ Questo portfolio dimostra la capacità dell'azienda di fornire viteria certifica
 engineering companies e plant operators nei settori più esigenti (pressure vessels, valves, process plants).
 
 OBIETTIVI DI ESPANSIONE
-Geografici: espansione in tutta Europa, con focus prioritario su:
+Geografici: espansione in tutta Europa e Middle East, con focus prioritario su:
   - Germania (mercato principale, alta domanda di qualità certificata)
   - Francia (impianti industriali, petrolchimico)
   - Paesi Bassi (hub logistico, oil & gas offshore)
   - Scandinavia (energia, navale, oil & gas Nord Mare)
+  - Arabia Saudita (oil & gas, Vision 2030, qualifica Saudi Aramco in corso)
+  - UAE / Abu Dhabi (oil & gas, ADNOC, qualifica in corso)
+  - GCC (Kuwait, Qatar, Oman — impianti petrolchimici e raffinerie)
 
 Settoriali: penetrazione nei comparti:
   - Navale e cantieristica (offshore e merchant)
   - Petrolchimico internazionale
   - Industria del gas naturale e GNL
+  - Valvole industriali (priorità massima 2026)
+  - Idrogeno verde e CCUS (Carbon Capture)
+  - EPC Contractor internazionali
 """

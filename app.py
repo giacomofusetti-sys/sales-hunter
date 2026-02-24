@@ -706,15 +706,22 @@ if pagina == "🔍 Nuova ricerca":
         settore = st.selectbox(
             "Settore merceologico",
             [
-                "Scambiatori di calore",
                 "Valvole industriali",
-                "Carpenteria metallica",
                 "Oil & Gas",
-                "Impianti industriali",
-                "Cantieristica navale",
                 "Energia e rinnovabili",
-                "Costruzioni e infrastrutture",
+                "Scambiatori di calore",
+                "Compressori industriali",
+                "Idrogeno e CCUS",
+                "EPC Contractor / Engineering",
+                "Impianti industriali",
+                "Trattamento emissioni (Aria/Acqua)",
+                "Caldareria e serbatoi",
+                "Cantieristica navale",
                 "Industria chimica",
+                "Carpenteria metallica",
+                "Costruzioni e infrastrutture",
+                "Sollevamento e mezzi pesanti",
+                "Data Center e infrastrutture IA",
                 "Movimento terra",
                 "Ferroviario",
                 "Manutenzione industriale",
@@ -727,7 +734,7 @@ if pagina == "🔍 Nuova ricerca":
     with col2:
         area = st.text_input(
             "Area geografica",
-            placeholder="Es: Lombardia, Germania, Stoccolma, Sud America..."
+            placeholder="Es: Lombardia, Germania, Arabia Saudita, UAE, GCC, Stoccolma..."
         )
 
     num_aziende = st.slider("Numero di aziende da trovare", min_value=3, max_value=10, value=3)

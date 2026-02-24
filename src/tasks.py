@@ -107,6 +107,11 @@ def crea_task_email(agente, leads, contatti):
         "- TIRANTI: nessun limite pratico di lunghezza, produzione su misura completa.\n"
         "- NON menzionare il vantaggio dimensionale se il prospect usa solo bulloneria standard\n"
         "  in acciai comuni su piccoli diametri: in quel caso la leva è certificazione e qualità.\n"
+        "- CBAM (Carbon Border Adjustment Mechanism): se il prospect è in un paese soggetto a CBAM\n"
+        "  (EU o partner commerciali) o importa da Asia/Est Europa, menziona che acquistare da un\n"
+        "  produttore italiano li esenta completamente dagli oneri CBAM — nessun certificato di\n"
+        "  carbonio richiesto per viteria prodotta in Europa. Argomento particolarmente efficace\n"
+        "  per prospect in valvole, oil & gas, energia e EPC contractor internazionali.\n"
     )
 
     return Task(
