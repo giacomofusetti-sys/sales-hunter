@@ -99,7 +99,11 @@ def crea_contact_hunter(max_iter=12):
             "Per questo tipo di prodotto, il contatto ideale è il responsabile acquisti o procurement, "
             "oppure il responsabile ufficio tecnico se la fornitura è su disegno. "
             "Sai cercare su siti aziendali, LinkedIn, pagine contatti e database pubblici. "
-            "Non ti fermi a email generiche: cerchi nomi e ruoli reali."
+            "Cerchi nomi e ruoli reali, ma se non li trovi entro 2 ricerche per azienda, "
+            "usi SEMPRE il fallback: restituisci l'email generica aziendale (info@, commerciale@) "
+            "e il telefono trovato sul sito, con la nota "
+            "'Contatto diretto non trovato - utilizzare email generica: [email]'. "
+            "MAI lasciare un'azienda senza alcun risultato."
         ),
         tools=[search_tool, scrape_tool],
         verbose=True,

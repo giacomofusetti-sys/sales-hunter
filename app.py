@@ -1,3 +1,4 @@
+import concurrent.futures
 import os
 import re
 import sys
@@ -135,7 +136,32 @@ def _parse_contatti_per_lead(testo_contatti, leads):
         else:
             risultato[lead_id] = []
 
+    # Fallback: per ogni lead senza email valida, genera contatto generico aziendale
+    for lead in leads:
+        lid = lead.get("id")
+        entry = risultato.get(lid)
+        has_email = entry and entry[0].get("email")
+        if not has_email:
+            risultato[lid] = [_fallback_contatto_generico(lead)]
+
     return risultato
+
+
+def _fallback_contatto_generico(lead):
+    """Genera un contatto generico di fallback dal sito aziendale del lead."""
+    sito = lead.get("sito", "")
+    email_gen = ""
+    if sito:
+        domain = re.sub(r'^https?://(www\.)?', '', sito.strip().rstrip('/'))
+        domain = domain.split('/')[0].split('?')[0]
+        if domain and '.' in domain:
+            email_gen = f"info@{domain}"
+    msg = (
+        f"Contatto diretto non trovato - utilizzare email generica: {email_gen}"
+        if email_gen
+        else "Contatto diretto non trovato - verificare sito aziendale"
+    )
+    return {"nome_contatto": msg, "ruolo": "", "email": email_gen, "telefono": ""}
 
 
 def _parse_email_per_lead(testo_email, leads):
@@ -953,7 +979,25 @@ elif pagina == "campagna_email":
                 contact_hunter = crea_contact_hunter(max_iter=max_iter_c)
                 task_contatti = crea_task_contatti_lead(contact_hunter, leads_da_contattare)
                 crew_c = Crew(agents=[contact_hunter], tasks=[task_contatti], verbose=False)
-                st.session_state.risultato_contatti_campagna = kickoff_con_retry(crew_c)
+                timeout_sec = max(300, len(leads_da_contattare) * 90)
+                risultato_raw = ""
+                try:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                        future = executor.submit(kickoff_con_retry, crew_c)
+                        risultato_raw = future.result(timeout=timeout_sec)
+                except concurrent.futures.TimeoutError:
+                    st.warning(
+                        f"⏱ Timeout ({timeout_sec}s): il Contact Hunter non ha completato in tempo. "
+                        "Sono stati applicati contatti generici di fallback per i lead non trovati."
+                    )
+                except Exception as e:
+                    st.warning(
+                        f"⚠️ Errore durante la ricerca contatti: {str(e)[:200]}. "
+                        "Sono stati applicati contatti generici di fallback."
+                    )
+                st.session_state.risultato_contatti_campagna = (
+                    risultato_raw or "Ricerca contatti non completata - contatti generici applicati."
+                )
             # Salva subito i contatti in leads.json (persistenza immediata)
             contatti_per_lead = _parse_contatti_per_lead(
                 str(st.session_state.risultato_contatti_campagna), leads_da_contattare

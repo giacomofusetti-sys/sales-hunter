@@ -47,16 +47,23 @@ def crea_task_contatti_lead(agente, leads):
             f"1. Prima scelta: Responsabile Acquisti / Procurement Manager\n"
             f"2. Seconda scelta: Responsabile Ufficio Tecnico\n"
             f"3. Terza scelta: Direttore Generale o Operations Manager\n\n"
-            f"Cerca su sito aziendale, pagina contatti, LinkedIn, Google."
+            f"Cerca su sito aziendale, pagina contatti, LinkedIn, Google.\n\n"
+            f"REGOLA OBBLIGATORIA: Per ogni azienda DEVI sempre produrre un risultato completo.\n"
+            f"Se non trovi il contatto diretto entro 2 tentativi di ricerca, NON continuare a cercare:\n"
+            f"vai sul sito aziendale, recupera l'email generica (info@, commerciale@, contatti@)\n"
+            f"e il numero di telefono generico, e scrivi ESATTAMENTE:\n"
+            f"'Contatto diretto non trovato - utilizzare email generica: [email trovata]'\n"
+            f"MAI lasciare un'azienda senza risultato. MAI saltare un'azienda."
         ),
         expected_output=(
-            "Lista testo con per ogni azienda:\n"
+            "Lista testo con per ogni azienda nella lista (TUTTE, nessuna esclusa):\n"
             "- Nome azienda\n"
-            "- Nome e cognome contatto\n"
+            "- Nome e cognome contatto (o 'Contatto diretto non trovato' se non disponibile)\n"
             "- Ruolo\n"
-            "- Email\n"
+            "- Email (diretta o generica - OBBLIGATORIA: almeno info@dominio.com)\n"
             "- Telefono (se disponibile)\n"
-            "Se non trovi il contatto diretto, indica l'email generica aziendale."
+            "Se non trovi il contatto diretto, scrivi ESATTAMENTE: "
+            "'Contatto diretto non trovato - utilizzare email generica: [email generica]'"
         ),
         agent=agente
     )
